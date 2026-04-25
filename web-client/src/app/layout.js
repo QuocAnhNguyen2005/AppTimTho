@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
             <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
               <a href="#services" style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>Dịch vụ</a>
               <a href="/login" style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>Đăng nhập</a>
-              <button className="btn-primary" style={{ padding: '10px 20px', fontSize: '15px' }}>Đăng ký</button>
+              <a href="/register" className="btn-primary" style={{ padding: '10px 20px', fontSize: '15px' }}>Đăng ký</a>
             </div>
           </div>
         </nav>

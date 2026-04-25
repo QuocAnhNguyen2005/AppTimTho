@@ -1,0 +1,136 @@
+"use client";
+
+import { useState } from 'react';
+
+const inputStyle = {
+  width: '100%',
+  padding: '13px 16px',
+  borderRadius: '12px',
+  border: '1.5px solid var(--border-color)',
+  backgroundColor: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
+  fontSize: '15px',
+  outline: 'none',
+  transition: 'border-color 0.2s',
+  boxSizing: 'border-box',
+  fontFamily: 'inherit',
+};
+
+const labelStyle = {
+  display: 'block',
+  fontSize: '14px',
+  fontWeight: '600',
+  color: 'var(--text-primary)',
+  marginBottom: '8px',
+};
+
+export default function CustomerRegisterPage() {
+  const [avatarName, setAvatarName] = useState('');
+
+  return (
+    <main style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
+      <div style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderRadius: '24px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.10)',
+        padding: '48px',
+        width: '100%',
+        maxWidth: '520px',
+        border: '1px solid var(--border-color)'
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ fontSize: '40px', marginBottom: '12px' }}>🏠</div>
+          <h1 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '6px' }}>
+            Tạo tài khoản Khách hàng
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+            Điền thông tin để bắt đầu tìm thợ sửa chữa uy tín.
+          </p>
+        </div>
+
+        <form onSubmit={e => e.preventDefault()}>
+          {/* Họ và tên */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>Họ và tên <span style={{ color: 'red' }}>*</span></label>
+            <input type="text" placeholder="Nguyễn Văn A" style={inputStyle}
+              onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
+          </div>
+
+          {/* Số điện thoại */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>Số điện thoại <span style={{ color: 'red' }}>*</span></label>
+            <input type="tel" placeholder="0909 xxx xxx" style={inputStyle}
+              onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+              Dùng làm tên đăng nhập và nhận mã OTP xác thực.
+            </p>
+          </div>
+
+          {/* Mật khẩu */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>Mật khẩu <span style={{ color: 'red' }}>*</span></label>
+            <input type="password" placeholder="Tối thiểu 8 ký tự" style={inputStyle}
+              onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
+          </div>
+
+          {/* Xác nhận mật khẩu */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>Xác nhận mật khẩu <span style={{ color: 'red' }}>*</span></label>
+            <input type="password" placeholder="Nhập lại mật khẩu" style={inputStyle}
+              onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
+          </div>
+
+          {/* Địa chỉ */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>Địa chỉ mặc định <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--text-secondary)' }}>(Tùy chọn)</span></label>
+            <input type="text" placeholder="Ví dụ: 123 Đường ABC, Quận 1, TP.HCM" style={inputStyle}
+              onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+              📍 Lần sau gọi thợ bạn không cần gõ lại địa chỉ.
+            </p>
+          </div>
+
+          {/* Avatar */}
+          <div style={{ marginBottom: '28px' }}>
+            <label style={labelStyle}>Ảnh đại diện <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--text-secondary)' }}>(Tùy chọn)</span></label>
+            <div style={{
+              border: '1.5px dashed var(--border-color)',
+              borderRadius: '12px',
+              padding: '20px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              backgroundColor: 'var(--bg-hover)',
+              transition: 'border-color 0.2s'
+            }}
+              onClick={() => document.getElementById('avatar-upload-customer').click()}
+            >
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>📷</div>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                {avatarName || 'Nhấn để chọn ảnh (JPG, PNG)'}
+              </p>
+              <input id="avatar-upload-customer" type="file" accept="image/*" style={{ display: 'none' }}
+                onChange={e => setAvatarName(e.target.files[0]?.name || '')} />
+            </div>
+          </div>
+
+          <button type="submit" className="btn-primary" style={{ width: '100%', padding: '15px', fontSize: '16px', borderRadius: '12px', textAlign: 'center' }}>
+            Tạo tài khoản
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+          Đã có tài khoản?{' '}
+          <a href="/login" style={{ color: 'var(--accent-primary)', fontWeight: '600' }}>Đăng nhập</a>
+          {' · '}
+          <a href="/register" style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Quay lại</a>
+        </p>
+      </div>
+    </main>
+  );
+}

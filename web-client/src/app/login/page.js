@@ -8,12 +8,12 @@
  *  - Form đăng nhập: trường "Tên tài khoản / Email" và "Mật khẩu"
  *  - Link "Quên mật khẩu?" → TODO: trang reset mật khẩu
  *  - Link "Đăng ký ngay" → /register
- * @note Chưa kết nối API - submit form hiện tại chỉ gọi e.preventDefault() để không reload trang.
- *       Cần tích hợp với backend /api/auth/login sau này.
+ * @note Đã kết nối API /api/auth/login.
  */
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 /**
  * @component LoginPage
@@ -21,6 +21,54 @@ import React from 'react';
  * Hệ thống backend sẽ phân biệt vai trò (role) dựa vào dữ liệu trả về sau khi đăng nhập thành công.
  */
 export default function LoginPage() {
+  const router = useRouter();
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!phoneNumber || !password) {
+      setErrorMsg('Vui lòng nhập tài khoản và mật khẩu.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone_number: phoneNumber,
+          password: password
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Sai thông tin đăng nhập');
+      }
+
+      // Lưu role hoặc token nếu cần (hiện tại chỉ demo successMsg)
+      setSuccessMsg(`Đăng nhập thành công với vai trò: ${data.role === 'customer' ? 'Khách hàng' : 'Thợ'}. Đang chuyển hướng...`);
+      
+      // Giả lập chuyển về trang chủ sau 2s
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
       <div style={{ 
@@ -136,14 +184,27 @@ export default function LoginPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={e => e.preventDefault()}>
+        <form onSubmit={handleLogin}>
+          {errorMsg && (
+            <div style={{ padding: '12px', backgroundColor: '#FEE2E2', color: '#DC2626', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '500' }}>
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div style={{ padding: '12px', backgroundColor: '#D1FAE5', color: '#059669', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '500' }}>
+              {successMsg}
+            </div>
+          )}
+
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>
-              Tên tài khoản / Email
+              Số điện thoại
             </label>
             <input
               type="text"
-              placeholder="Nhập email hoặc số điện thoại"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="Nhập số điện thoại"
               style={{
                 width: '100%',
                 padding: '13px 16px',
@@ -172,6 +233,8 @@ export default function LoginPage() {
             </div>
             <input
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Nhập mật khẩu"
               style={{
                 width: '100%',
@@ -190,8 +253,8 @@ export default function LoginPage() {
             />
           </div>
 
-          <button type="submit" className="btn-primary" style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '12px', textAlign: 'center' }}>
-            Đăng nhập
+          <button type="submit" disabled={isLoading} className="btn-primary" style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '12px', textAlign: 'center', opacity: isLoading ? 0.7 : 1 }}>
+            {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
           </button>
         </form>
 

@@ -101,4 +101,48 @@ router.post('/register/worker', async (req, res) => {
   }
 });
 
+// 3. Đăng nhập (Dùng chung Khách hàng và Thợ)
+router.post('/login', async (req, res) => {
+  try {
+    const { phone_number, password } = req.body;
+
+    if (!phone_number || !password) {
+      return res.status(400).json({ error: 'Vui lòng nhập tài khoản và mật khẩu' });
+    }
+
+    // Ưu tiên tìm trong bảng Khách hàng (users) trước
+    const userResult = await db.query('SELECT id, full_name, phone_number, password_hash, avatar_url FROM users WHERE phone_number = $1', [phone_number]);
+    
+    if (userResult.rows.length > 0) {
+      const user = userResult.rows[0];
+      const isValid = await bcrypt.compare(password, user.password_hash);
+      
+      if (isValid) {
+        delete user.password_hash; // Không trả về mật khẩu
+        return res.status(200).json({ message: 'Đăng nhập Khách hàng thành công', role: 'customer', user });
+      }
+    }
+
+    // Nếu không có bên Khách hàng hoặc sai mật khẩu, tìm bên bảng Thợ (workers)
+    const workerResult = await db.query('SELECT id, full_name, phone_number, password_hash, avatar_url, is_verified FROM workers WHERE phone_number = $1', [phone_number]);
+    
+    if (workerResult.rows.length > 0) {
+      const worker = workerResult.rows[0];
+      const isValid = await bcrypt.compare(password, worker.password_hash);
+      
+      if (isValid) {
+        delete worker.password_hash;
+        return res.status(200).json({ message: 'Đăng nhập Thợ thành công', role: 'worker', user: worker });
+      }
+    }
+
+    // Cả hai bảng đều không khớp
+    return res.status(401).json({ error: 'Sai số điện thoại hoặc mật khẩu' });
+
+  } catch (error) {
+    console.error('Lỗi khi đăng nhập:', error);
+    res.status(500).json({ error: 'Lỗi server nội bộ' });
+  }
+});
+
 module.exports = router;

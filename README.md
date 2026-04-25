@@ -147,8 +147,8 @@ Database: `apptimtho`
 
 | Bảng | Chức năng |
 |------|----------|
-| `users` | Tài khoản Khách hàng |
-| `workers` | Tài khoản Thợ sửa chữa (đối tác) |
+| `users` | Tài khoản Khách hàng (SĐT, Họ tên, Mật khẩu đã hash, Địa chỉ...) |
+| `workers` | Tài khoản Thợ (SĐT, Mật khẩu, CCCD, Tài khoản ngân hàng, Chuyên môn, Khu vực...) |
 | `admins` | Tài khoản quản trị viên hệ thống |
 | `categories` | Danh mục dịch vụ (Điện, Nước, Điện lạnh...) |
 | `worker_services` | Dịch vụ cụ thể mà từng Thợ cung cấp |
@@ -176,6 +176,18 @@ Mỗi khi một booking hoàn thành:
 - **Thợ nhận được** = `total_price × 84.5%` → lưu vào `worker_earnings`
 
 Dữ liệu này được tính sẵn và lưu vào bảng `bookings` tại thời điểm tạo đơn.
+
+---
+
+## 🔒 Chính sách bảo mật (Security Policy)
+
+Hệ thống áp dụng chuẩn bảo mật nghiêm ngặt cho tài khoản người dùng:
+- **Băm mật khẩu (Hashing):** Toàn bộ mật khẩu của Khách hàng và Thợ đều được mã hóa bằng `bcryptjs` (salt 10 rounds) trước khi lưu trữ vào PostgreSQL.
+- **Quy tắc đặt mật khẩu:** Cả Client và API đều xác thực mật khẩu phải thỏa mãn:
+  - Độ dài từ **8 đến 16 ký tự**.
+  - Ít nhất **1 chữ cái in hoa**.
+  - Ít nhất **4 chữ số**.
+  - Ít nhất **1 ký tự đặc biệt** (VD: `@, #, $, %...`).
 
 ---
 
@@ -257,7 +269,7 @@ CLOUDINARY_API_SECRET=
 
 ### 🔨 Cần tích hợp thêm (TODO)
 
-- [ ] **API đăng nhập/đăng ký**: Kết nối form web với backend `POST /api/auth`
+- [x] **API đăng nhập/đăng ký**: Kết nối form web với backend `POST /api/auth` (đã hoàn thiện cùng password hashing)
 - [ ] **OAuth**: Tích hợp đăng nhập Google, Zalo, Facebook
 - [ ] **OTP SMS/Zalo**: Xác thực số điện thoại khi đăng ký
 - [ ] **Upload ảnh**: CCCD, avatar Thợ → Cloudinary hoặc AWS S3

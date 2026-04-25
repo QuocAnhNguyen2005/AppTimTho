@@ -1,21 +1,27 @@
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
 export const metadata = {
-  title: 'TìmThợ - Nền tảng kết nối thợ sửa chữa',
+  title: 'AppTimTho - Tìm thợ sửa chữa quanh bạn',
   description: 'Nền tảng kết nối thợ sửa chữa gia dụng, điện lạnh, ống nước với khách hàng nhanh chóng, uy tín.',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow pt-20">
-          {children}
-        </main>
-        <Footer />
+      <body>
+        <nav className="glass-header">
+          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '-0.5px' }}>
+              AppTimTho
+            </div>
+            <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+              <a href="#services" style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>Dịch vụ</a>
+              <a href="#workers" style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>Trở thành thợ</a>
+              <button className="btn-primary" style={{ padding: '10px 20px', fontSize: '15px' }}>Đăng nhập</button>
+            </div>
+          </div>
+        </nav>
+        {children}
       </body>
     </html>
   );

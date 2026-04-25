@@ -40,10 +40,12 @@ async function initDb() {
 
   try {
     await appClient.connect();
-    console.log('Đang tạo các tables (Users, Workers, Admins, v.v.)...');
+    console.log('Đang dọn dẹp các tables cũ (nếu có) và tạo mới (Users, Workers, Admins, v.v.)...');
     
     // Câu lệnh SQL để tạo cấu trúc CSDL
     const sql = `
+      DROP TABLE IF EXISTS payments, reviews, bookings, worker_services, categories, admins, workers, users CASCADE;
+
       CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
       CREATE TABLE IF NOT EXISTS users (
@@ -53,6 +55,7 @@ async function initDb() {
         email VARCHAR(100),
         password_hash VARCHAR(255) NOT NULL,
         avatar_url TEXT,
+        address TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -62,10 +65,17 @@ async function initDb() {
         full_name VARCHAR(100) NOT NULL,
         email VARCHAR(100),
         password_hash VARCHAR(255) NOT NULL,
+        date_of_birth DATE,
         avatar_url TEXT,
         identity_card VARCHAR(50),
+        cccd_front_url TEXT,
+        cccd_back_url TEXT,
         bank_account_number VARCHAR(50),
         bank_name VARCHAR(100),
+        bank_account_name VARCHAR(100),
+        specialties TEXT[],
+        experience_years VARCHAR(20),
+        districts_active TEXT[],
         is_verified BOOLEAN DEFAULT FALSE,
         average_rating DECIMAL(3,2) DEFAULT 0.0,
         total_reviews INTEGER DEFAULT 0,
@@ -136,7 +146,7 @@ async function initDb() {
     `;
     
     await appClient.query(sql);
-    console.log('✅ Đã tạo toàn bộ các Tables thành công!');
+    console.log('✅ Đã dọn dẹp và tạo toàn bộ các Tables thành công!');
   } catch (err) {
     console.error('❌ Lỗi khi tạo tables:', err.message);
   } finally {

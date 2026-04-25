@@ -6,13 +6,12 @@
  *  Phần 1 - Định danh: Họ tên, ngày sinh, SBT, mật khẩu, CCCD (2 mặt)
  *  Phần 2 - Tài chính: Ngân hàng, số TK, tên chủ TK (dùng để hệ thống tự động chuyển 84,5% tiền công)
  *  Phần 3 - Năng lực: Ảnh chân dung, chuyên môn, kinh nghiệm, khu vực hoạt động
- * @note Chưa kết nối API - submit form chỉ gọi e.preventDefault().
- *       Cần tích hợp với backend POST /api/auth/register/worker và xử lý upload file sau này.
- *       Hồ sơ sau khi gửi phải có Admin duyệt trong Dashboard (web-admin) trước khi được hoạt động.
+ * @note Đã kết nối API `POST /api/auth/register/worker`.
  */
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 /**
  * @constant inputStyle - Style dùng chung cho tất cả input/select trong form Thợ
@@ -79,11 +78,109 @@ const DISTRICTS_HCM = [
  * - selectedDistricts: mảng các quận/huyện được chọn (toggle chip)
  */
 export default function WorkerRegisterPage() {
+  const router = useRouter();
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    dateOfBirth: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    identityCard: '',
+    bankName: '',
+    bankAccountNumber: '',
+    bankAccountName: '',
+    experienceYears: ''
+  });
+
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const [avatarName, setAvatarName] = useState('');
   const [cccdFrontName, setCccdFrontName] = useState('');
   const [cccdBackName, setCccdBackName] = useState('');
   const [selectedSpecialties, setSelectedSpecialties] = useState([]);
   const [selectedDistricts, setSelectedDistricts] = useState([]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const validatePassword = (password) => {
+    if (!password || password.length < 8 || password.length > 16) return false;
+    if (!/[A-Z]/.test(password)) return false;
+    const digitCount = (password.match(/\d/g) || []).length;
+    if (digitCount < 4) return false;
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password)) return false;
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    // Basic validation
+    if (!formData.fullName || !formData.phone || !formData.password || !formData.confirmPassword || !formData.identityCard || !formData.bankName || !formData.bankAccountNumber) {
+      setErrorMsg('Vui lòng điền đầy đủ các trường bắt buộc (*).');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMsg('Mật khẩu xác nhận không khớp.');
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      setErrorMsg('Mật khẩu phải từ 8-16 ký tự, gồm ít nhất 1 chữ hoa, 4 chữ số và 1 ký tự đặc biệt.');
+      return;
+    }
+
+    if (selectedSpecialties.length === 0 || selectedDistricts.length === 0) {
+      setErrorMsg('Vui lòng chọn ít nhất 1 chuyên môn và 1 khu vực hoạt động.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/register/worker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: formData.fullName,
+          phone_number: formData.phone,
+          password: formData.password,
+          date_of_birth: formData.dateOfBirth,
+          identity_card: formData.identityCard,
+          cccd_front_url: cccdFrontName,
+          cccd_back_url: cccdBackName,
+          bank_name: formData.bankName,
+          bank_account_number: formData.bankAccountNumber,
+          bank_account_name: formData.bankAccountName,
+          specialties: selectedSpecialties,
+          experience_years: formData.experienceYears,
+          districts_active: selectedDistricts
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Đã có lỗi xảy ra');
+      }
+
+      setSuccessMsg('Đăng ký hồ sơ Thợ thành công! Vui lòng chờ quản trị viên duyệt.');
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
+      
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   /**
    * @function toggleSpecialty
@@ -128,7 +225,17 @@ export default function WorkerRegisterPage() {
           </p>
         </div>
 
-        <form onSubmit={e => e.preventDefault()}>
+        <form onSubmit={handleSubmit}>
+          {errorMsg && (
+            <div style={{ padding: '12px', backgroundColor: '#FEE2E2', color: '#DC2626', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '500' }}>
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div style={{ padding: '12px', backgroundColor: '#D1FAE5', color: '#059669', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '500' }}>
+              {successMsg}
+            </div>
+          )}
 
           {/* === PHẦN 1: Thông tin định danh === */}
           <div style={{ marginBottom: '32px' }}>
@@ -137,13 +244,13 @@ export default function WorkerRegisterPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <label style={labelStyle}>Họ và tên <span style={{ color: 'red' }}>*</span></label>
-                <input type="text" placeholder="Nguyễn Văn A" style={inputStyle}
+                <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Nguyễn Văn A" style={inputStyle}
                   onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
               </div>
               <div>
                 <label style={labelStyle}>Ngày sinh <span style={{ color: 'red' }}>*</span></label>
-                <input type="date" style={inputStyle}
+                <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} style={inputStyle}
                   onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
               </div>
@@ -151,7 +258,7 @@ export default function WorkerRegisterPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>Số điện thoại <span style={{ color: 'red' }}>*</span></label>
-              <input type="tel" placeholder="0909 xxx xxx" style={inputStyle}
+              <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="0909 xxx xxx" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
             </div>
@@ -159,13 +266,13 @@ export default function WorkerRegisterPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <label style={labelStyle}>Mật khẩu <span style={{ color: 'red' }}>*</span></label>
-                <input type="password" placeholder="Tối thiểu 8 ký tự" style={inputStyle}
+                <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Tối thiểu 8 ký tự" style={inputStyle}
                   onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
               </div>
               <div>
                 <label style={labelStyle}>Xác nhận mật khẩu <span style={{ color: 'red' }}>*</span></label>
-                <input type="password" placeholder="Nhập lại mật khẩu" style={inputStyle}
+                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} placeholder="Nhập lại mật khẩu" style={inputStyle}
                   onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
               </div>
@@ -173,7 +280,7 @@ export default function WorkerRegisterPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>Số CCCD <span style={{ color: 'red' }}>*</span></label>
-              <input type="text" placeholder="012345678901" maxLength={12} style={inputStyle}
+              <input type="text" name="identityCard" value={formData.identityCard} onChange={handleInputChange} placeholder="012345678901" maxLength={12} style={inputStyle}
                 onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
             </div>
@@ -212,7 +319,7 @@ export default function WorkerRegisterPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>Ngân hàng <span style={{ color: 'red' }}>*</span></label>
-              <select style={{ ...inputStyle, appearance: 'none' }}
+              <select name="bankName" value={formData.bankName} onChange={handleInputChange} style={{ ...inputStyle, appearance: 'none' }}
                 onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'}>
                 <option value="">-- Chọn ngân hàng --</option>
@@ -222,14 +329,14 @@ export default function WorkerRegisterPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>Số tài khoản <span style={{ color: 'red' }}>*</span></label>
-              <input type="text" placeholder="Nhập số tài khoản" style={inputStyle}
+              <input type="text" name="bankAccountNumber" value={formData.bankAccountNumber} onChange={handleInputChange} placeholder="Nhập số tài khoản" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
             </div>
 
             <div>
               <label style={labelStyle}>Tên chủ tài khoản <span style={{ color: 'red' }}>*</span></label>
-              <input type="text" placeholder="Phải khớp với tên trên CCCD" style={inputStyle}
+              <input type="text" name="bankAccountName" value={formData.bankAccountName} onChange={handleInputChange} placeholder="Phải khớp với tên trên CCCD" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'} />
             </div>
@@ -268,7 +375,7 @@ export default function WorkerRegisterPage() {
             {/* Số năm kinh nghiệm */}
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>Số năm kinh nghiệm <span style={{ color: 'red' }}>*</span></label>
-              <select style={{ ...inputStyle, appearance: 'none' }}
+              <select name="experienceYears" value={formData.experienceYears} onChange={handleInputChange} style={{ ...inputStyle, appearance: 'none' }}
                 onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border-color)'}>
                 <option value="">-- Chọn --</option>

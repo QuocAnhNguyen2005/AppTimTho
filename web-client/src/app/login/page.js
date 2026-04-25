@@ -1,7 +1,25 @@
+/**
+ * @file login/page.js - Trang đăng nhập
+ * @route /login
+ * @directive "use client" - Bắt buộc vì sử dụng event handlers (onSubmit, onFocus, onMouseEnter...)
+ * @description Cho phép cả Khách hàng và Thợ đăng nhập vào hệ thống.
+ * Bao gồm:
+ *  - 3 nút đăng nhập mạng xã hội (Google, Zalo, Facebook) - hiện tại chỉ là UI, cần tích hợp OAuth sau
+ *  - Form đăng nhập: trường "Tên tài khoản / Email" và "Mật khẩu"
+ *  - Link "Quên mật khẩu?" → TODO: trang reset mật khẩu
+ *  - Link "Đăng ký ngay" → /register
+ * @note Chưa kết nối API - submit form hiện tại chỉ gọi e.preventDefault() để không reload trang.
+ *       Cần tích hợp với backend /api/auth/login sau này.
+ */
 "use client";
 
 import React from 'react';
 
+/**
+ * @component LoginPage
+ * @description Trang đăng nhập dùng chung cho Khách hàng và Thợ.
+ * Hệ thống backend sẽ phân biệt vai trò (role) dựa vào dữ liệu trả về sau khi đăng nhập thành công.
+ */
 export default function LoginPage() {
   return (
     <main style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>

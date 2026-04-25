@@ -1,22 +1,47 @@
 
+/* ============================================================
+   DESIGN SYSTEM - AppTimTho Web Client
+   File: globals.css
+   Mô tả: Định nghĩa toàn bộ CSS token (biến màu, bóng đổ, nền),
+          reset mặc định, font chữ, button và các utility class
+          dùng chung cho tất cả các trang trong web-client.
+   ============================================================ */
 
-/* Default (Light Mode) Variables */
+/* ----------------------------------------------------------
+   BIẾN MÀU & TOKEN - LIGHT MODE (mặc định)
+   Áp dụng khi người dùng không chọn chế độ tối.
+   Thay đổi giá trị tại đây sẽ ảnh hưởng toàn bộ giao diện.
+   ---------------------------------------------------------- */
 :root {
-  --bg-primary: #F8FAFC;
-  --bg-secondary: #FFFFFF;
-  --bg-hover: #F1F5F9;
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --accent-primary: #4F46E5;
-  --accent-hover: #4338CA;
-  --border-color: #E2E8F0;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  /* Màu nền */
+  --bg-primary: #F8FAFC;      /* Nền chính toàn trang */
+  --bg-secondary: #FFFFFF;    /* Nền card, panel, form */
+  --bg-hover: #F1F5F9;        /* Nền section Hero, hover state */
+
+  /* Màu chữ */
+  --text-primary: #0F172A;    /* Chữ tiêu đề, nội dung chính */
+  --text-secondary: #475569;  /* Chữ phụ, mô tả, placeholder */
+
+  /* Màu nhấn (Accent) - Indigo / Tím */
+  --accent-primary: #4F46E5;  /* Màu chính: button, link, border focus */
+  --accent-hover: #4338CA;    /* Màu khi hover vào btn-primary */
+
+  /* Đường viền & Bóng đổ */
+  --border-color: #E2E8F0;                                                     /* Viền card, input, divider */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);                                 /* Bóng nhẹ */
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* Bóng card */
+
+  /* Nền kính mờ (dùng cho navbar khi cuộn) */
   --glass-bg: rgba(255, 255, 255, 0.85);
-  --success: #10B981;
+
+  /* Màu trạng thái */
+  --success: #10B981; /* Xanh lá - thành công, hoàn thành đơn hàng */
 }
 
-/* Dark Mode Variables */
+/* ----------------------------------------------------------
+   BIẾN MÀU - DARK MODE (khi có attribute data-theme="dark")
+   Được bật thủ công bằng JavaScript: document.documentElement.dataset.theme = 'dark'
+   ---------------------------------------------------------- */
 [data-theme='dark'] {
   --bg-primary: #0F172A;
   --bg-secondary: #1E293B;
@@ -29,6 +54,11 @@
   --glass-bg: rgba(30, 41, 59, 0.85);
 }
 
+/* ----------------------------------------------------------
+   BIẾN MÀU - DARK MODE (tự động theo hệ điều hành)
+   Kích hoạt khi OS/trình duyệt ở chế độ tối
+   và người dùng chưa chọn theme cụ thể nào.
+   ---------------------------------------------------------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg-primary: #0F172A;
@@ -43,35 +73,57 @@
   }
 }
 
+/* ----------------------------------------------------------
+   CSS RESET - Xóa margin/padding mặc định của trình duyệt
+   ---------------------------------------------------------- */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* ----------------------------------------------------------
+   BODY - Font chữ mặc định, màu nền và màu chữ toàn trang
+   Font 'Outfit' được tải từ Google Fonts (xem app/globals.css)
+   ---------------------------------------------------------- */
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased; /* Font rõ nét hơn trên macOS/iOS */
 }
 
+/* ----------------------------------------------------------
+   LINK - Bỏ gạch chân, dùng màu accent làm mặc định
+   ---------------------------------------------------------- */
 a {
   text-decoration: none;
   color: var(--accent-primary);
 }
 
+/* ----------------------------------------------------------
+   .container - Khung nội dung giới hạn chiều rộng tối đa
+   Dùng trong tất cả section: Hero, Services, CTA...
+   ---------------------------------------------------------- */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
-/* Buttons */
+/* ============================================================
+   BUTTON COMPONENTS
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   .btn-primary - Button hành động chính (màu nền tím)
+   Dùng cho: "Đăng ký" trên navbar, "Tạo tài khoản" trong form,
+             "Gửi hồ sơ đăng ký", "Đăng nhập"
+   ---------------------------------------------------------- */
 .btn-primary {
-  background-color: var(--accent-primary);
+  background-color: var(--accent-primary); /* Nền tím indigo */
   color: #fff;
   padding: 12px 24px;
   border-radius: 8px;
@@ -82,12 +134,17 @@ a {
   display: inline-block;
 }
 
+/* Hiệu ứng hover: làm tối nền + nâng lên + đổ bóng */
 .btn-primary:hover {
   background-color: var(--accent-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
+/* ----------------------------------------------------------
+   .btn-outline - Button phụ (viền tím, nền trong suốt)
+   Dùng cho: "Đăng ký làm thợ" trong Hero section trang chủ
+   ---------------------------------------------------------- */
 .btn-outline {
   background-color: transparent;
   color: var(--accent-primary);
@@ -100,22 +157,31 @@ a {
   display: inline-block;
 }
 
+/* Hiệu ứng hover: lấp đầy bằng màu accent, chữ trắng */
 .btn-outline:hover {
   background-color: var(--accent-primary);
   color: #fff;
   transform: translateY(-2px);
 }
 
-/* Utility */
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   .glass-header - Thanh điều hướng (Navbar) cố định ở trên cùng
+   Hiệu ứng kính mờ (glassmorphism): nền bán trong suốt + blur
+   Luôn hiển thị phía trên tất cả nội dung (z-index: 50)
+   ---------------------------------------------------------- */
 .glass-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 80px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--glass-bg);           /* Nền kính mờ */
+  backdrop-filter: blur(12px);           /* Làm mờ nội dung phía sau */
+  -webkit-backdrop-filter: blur(12px);   /* Safari support */
   border-bottom: 1px solid var(--border-color);
   z-index: 50;
   display: flex;

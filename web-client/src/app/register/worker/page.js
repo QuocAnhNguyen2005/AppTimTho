@@ -1,7 +1,23 @@
+/**
+ * @file register/worker/page.js - Form đăng ký Hồ sơ Thợ
+ * @route /register/worker
+ * @directive "use client" - Cần thiết vì dùng useState và các event handler
+ * @description Form đăng ký đối tác Thợ - giống một bản CV thu nhỏ. Gồm 3 phần:
+ *  Phần 1 - Định danh: Họ tên, ngày sinh, SBT, mật khẩu, CCCD (2 mặt)
+ *  Phần 2 - Tài chính: Ngân hàng, số TK, tên chủ TK (dùng để hệ thống tự động chuyển 84,5% tiền công)
+ *  Phần 3 - Năng lực: Ảnh chân dung, chuyên môn, kinh nghiệm, khu vực hoạt động
+ * @note Chưa kết nối API - submit form chỉ gọi e.preventDefault().
+ *       Cần tích hợp với backend POST /api/auth/register/worker và xử lý upload file sau này.
+ *       Hồ sơ sau khi gửi phải có Admin duyệt trong Dashboard (web-admin) trước khi được hoạt động.
+ */
 "use client";
 
 import { useState } from 'react';
 
+/**
+ * @constant inputStyle - Style dùng chung cho tất cả input/select trong form Thợ
+ * Border đổi màu accent khi focus qua onFocus/onBlur.
+ */
 const inputStyle = {
   width: '100%',
   padding: '13px 16px',
@@ -16,6 +32,7 @@ const inputStyle = {
   fontFamily: 'inherit',
 };
 
+/** @constant labelStyle - Style dùng chung cho các thẻ label */
 const labelStyle = {
   display: 'block',
   fontSize: '14px',
@@ -24,6 +41,7 @@ const labelStyle = {
   marginBottom: '8px',
 };
 
+/** @constant sectionTitleStyle - Tiêu đề phân mục (Phần 1/2/3) kèm đường kẻ dưới */
 const sectionTitleStyle = {
   fontSize: '17px',
   fontWeight: '800',
@@ -36,10 +54,13 @@ const sectionTitleStyle = {
   gap: '8px'
 };
 
+/** @constant SPECIALTIES - Danh sách chuyên môn hiển thị dưới dạng chip toggle. Chỉnh sửa tại đây để thêm/bắt chuyên môn mới. */
 const SPECIALTIES = ['Điện lạnh', 'Sửa ống nước', 'Sửa PC / Điện tử', 'Điện gia dụng', 'Mộc & Nội thất', 'Vệ sinh công nghiệp', 'Sửa khóa', 'Khác'];
 
+/** @constant BANKS - Danh sách ngân hàng phổ biến tại Việt Nam hiển thị trong dropdown. Chỉnh sửa tại đây để thêm/bớt ngân hàng. */
 const BANKS = ['Vietcombank', 'MB Bank', 'Techcombank', 'Agribank', 'BIDV', 'VietinBank', 'ACB', 'TPBank', 'SHB', 'VPBank', 'Sacombank', 'MSB', 'HDBank'];
 
+/** @constant DISTRICTS_HCM - Danh sách quận/huyện TP.HCM để Thợ chọn khu vực hoạt động. */
 const DISTRICTS_HCM = [
   'Quận 1', 'Quận 3', 'Quận 4', 'Quận 5', 'Quận 6', 'Quận 7',
   'Quận 8', 'Quận 10', 'Quận 11', 'Quận 12', 'Bình Thạnh', 'Gò Vấp',
@@ -47,6 +68,16 @@ const DISTRICTS_HCM = [
   'Bình Chánh', 'Hóc Môn', 'Nhà Bè', 'Cần Giờ', 'Củ Chi'
 ];
 
+/**
+ * @component WorkerRegisterPage
+ * @description Form đăng ký Hồ sơ Thợ gồm 3 phân mục rõ ràng.
+ *
+ * State quản lý:
+ * - avatarName: tên file ảnh chân dung đã chọn
+ * - cccdFrontName / cccdBackName: tên file 2 mặt CCCD đã chọn
+ * - selectedSpecialties: mảng các chuyên môn được chọn (toggle chip)
+ * - selectedDistricts: mảng các quận/huyện được chọn (toggle chip)
+ */
 export default function WorkerRegisterPage() {
   const [avatarName, setAvatarName] = useState('');
   const [cccdFrontName, setCccdFrontName] = useState('');
@@ -54,10 +85,24 @@ export default function WorkerRegisterPage() {
   const [selectedSpecialties, setSelectedSpecialties] = useState([]);
   const [selectedDistricts, setSelectedDistricts] = useState([]);
 
+  /**
+   * @function toggleSpecialty
+   * @description Bật/Tắt việc chọn một chuyên môn.
+   * Nếu chuyên môn đã có trong mảng → loại bỏ. Nếu chưa có → thêm vào.
+   * @param {string} s - Tên chuyên môn cần toggle
+   */
   const toggleSpecialty = (s) => setSelectedSpecialties(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+
+  /**
+   * @function toggleDistrict
+   * @description Bật/Tắt việc chọn một quận/huyện hoạt động.
+   * @param {string} d - Tên quận/huyện cần toggle
+   */
   const toggleDistrict = (d) => setSelectedDistricts(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
 
+  /** Style chip khi được chọn: nền tím, chữ trắng */
   const chipSelected = { padding: '8px 16px', borderRadius: '99px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '2px solid var(--accent-primary)', backgroundColor: 'var(--accent-primary)', color: 'white', transition: 'all 0.15s' };
+  /** Style chip mặc định (chưa chọn): viền xám, nền trắng */
   const chipDefault = { padding: '8px 16px', borderRadius: '99px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '2px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', transition: 'all 0.15s' };
 
   return (

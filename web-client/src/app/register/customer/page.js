@@ -1,7 +1,26 @@
+/**
+ * @file register/customer/page.js - Form đăng ký Khách hàng
+ * @route /register/customer
+ * @directive "use client" - Cần thiết vì dùng useState để lưu tên file ảnh đại diện
+ * @description Form đăng ký tài khoản dành riêng cho Khách hàng (người có nhu cầu tìm thợ).
+ * Các trường thông tin:
+ *  - Họ và tên (bắt buộc)
+ *  - Số điện thoại (bắt buộc) - dùng làm username + nhận OTP
+ *  - Mật khẩu + Xác nhận mật khẩu (bắt buộc)
+ *  - Địa chỉ mặc định (tùy chọn) - lưu để tái sử dụng khi gọi thợ
+ *  - Ảnh đại diện (tùy chọn) - upload file ảnh
+ * @note Chưa kết nối API - submit form chỉ gọi e.preventDefault().
+ *       Cần tích hợp với backend POST /api/auth/register/customer sau này.
+ */
 "use client";
 
 import { useState } from 'react';
 
+/**
+ * @constant inputStyle
+ * @description Style dùng chung cho tất cả thẻ <input> và <select> trong form.
+ * Border sẽ đổi màu accent-primary khi focus (xử lý qua onFocus/onBlur).
+ */
 const inputStyle = {
   width: '100%',
   padding: '13px 16px',
@@ -16,6 +35,10 @@ const inputStyle = {
   fontFamily: 'inherit',
 };
 
+/**
+ * @constant labelStyle
+ * @description Style dùng chung cho các thẻ <label> trong form.
+ */
 const labelStyle = {
   display: 'block',
   fontSize: '14px',
@@ -24,7 +47,13 @@ const labelStyle = {
   marginBottom: '8px',
 };
 
+/**
+ * @component CustomerRegisterPage
+ * @description Form đăng ký cho Khách hàng với các trường thông tin cá nhân.
+ * State avatarName: lưu tên file ảnh vừa chọn để hiển thị trong vùng upload.
+ */
 export default function CustomerRegisterPage() {
+  /** @type {string} avatarName - Tên file ảnh đại diện đã chọn (chỉ để hiển thị UI, chưa upload thật) */
   const [avatarName, setAvatarName] = useState('');
 
   return (

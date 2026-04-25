@@ -1,5 +1,23 @@
+/**
+ * @file page.js - Trang chủ (Landing Page)
+ * @route /
+ * @description Trang giới thiệu nền tảng AppTimTho dành cho tất cả khách truy cập.
+ * Bao gồm 3 phần chính:
+ *  1. Hero Section: Tiêu đề, mô tả và 2 nút hành động
+ *     - "Tìm thợ ngay" (.btn-primary) → TODO: dẫn tới trang tìm thợ
+ *     - "Đăng ký làm thợ" (.btn-outline) → TODO: dẫn tới /register
+ *  2. Services Section (#services): 3 card dịch vụ nổi bật
+ *     - Sửa Điện Gia Dụng, Điện Lạnh, Đường Ống Nước
+ *  3. CTA Section: Kêu gọi thợ đăng ký, nút "Tạo Hồ Sơ Thợ"
+ *     - TODO: nút "Tạo Hồ Sơ Thợ" cần dẫn tới /register/worker
+ */
 import React from 'react';
 
+/**
+ * @component Home
+ * @description Server Component - không cần "use client" vì không có state/event handler.
+ * Render tĩnh phía server để tối ưu SEO và tốc độ tải trang.
+ */
 export default function Home() {
   return (
     <main style={{ paddingTop: '80px', fontFamily: 'var(--font-sans)' }}>

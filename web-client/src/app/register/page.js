@@ -1,8 +1,24 @@
+/**
+ * @file register/page.js - Trang chọn vai trò đăng ký
+ * @route /register
+ * @directive "use client" - Cần thiết vì dùng useRouter() để điều hướng khi bấm nút
+ * @description Trang trung gian đầu tiên trong luồng đăng ký.
+ * Hiển thị 2 card lựa chọn vai trò:
+ *  - "Bạn là thợ?" (tím - accent-primary) → router.push('/register/worker')
+ *  - "Bạn là khách hàng?" (xanh #0EA5E9) → router.push('/register/customer')
+ * Hover vào card sẽ nâng lên + đổi màu viền theo màu đặc trưng của từng vai trò.
+ */
 "use client";
 
 import { useRouter } from 'next/navigation';
 
+/**
+ * @component RegisterPage
+ * @description Trang chọn vai trò - điểm vào của luồng đăng ký.
+ * Dùng useRouter() để điều hướng client-side (không reload trang).
+ */
 export default function RegisterPage() {
+  /** @type {import('next/navigation').AppRouterInstance} - Hook điều hướng của Next.js App Router */
   const router = useRouter();
 
   return (

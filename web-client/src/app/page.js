@@ -107,11 +107,11 @@ export default function Home() {
       {/* CTA Section */}
       <section style={{ padding: '100px 0', textAlign: 'center', backgroundColor: 'var(--accent-primary)', color: 'white' }}>
         <div className="container">
-          <h2 style={{ fontSize: '40px', fontWeight: '800', marginBottom: '24px', letterSpacing: '-0.5px' }}>
-            Bạn là thợ sửa chữa lành nghề?
+          <h2 style={{ fontSize: '48px', fontWeight: '800', marginBottom: '16px', letterSpacing: '-0.5px', lineHeight: '1.2' }}>
+            Đăng ký để nhận đơn hôm nay
           </h2>
-          <p style={{ fontSize: '18px', opacity: 0.95, marginBottom: '48px', maxWidth: '640px', margin: '0 auto 48px auto', lineHeight: '1.6' }}>
-            Đăng ký để nhận đơn hàng ngay hôm nay. Hệ thống chỉ lấy hoa hồng 15.5%, giúp bạn tối đa hóa thu nhập và tự chủ thời gian làm việc.
+          <p style={{ fontSize: '16px', opacity: 0.85, marginBottom: '48px', maxWidth: '640px', margin: '0 auto 48px auto', lineHeight: '1.6', fontStyle: 'italic' }}>
+            (Hệ thống khấu hao 15,5% chi phí cho mỗi giao dịch sửa chữa)
           </p>
           <button style={{ 
             backgroundColor: 'white', 

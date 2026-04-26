@@ -1,0 +1,11 @@
+khởi động chạy web 
+cd web-client
+npm run dev
+
+khởi động backend 
+cd backend
+node index.js
+
+khởi động tài khoản admin
+cd backend
+node seed.js

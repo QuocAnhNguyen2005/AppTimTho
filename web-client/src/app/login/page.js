@@ -57,9 +57,13 @@ export default function LoginPage() {
       // Lưu role hoặc token nếu cần (hiện tại chỉ demo successMsg)
       setSuccessMsg(`Đăng nhập thành công với vai trò: ${data.role === 'customer' ? 'Khách hàng' : 'Thợ'}. Đang chuyển hướng...`);
       
-      // Giả lập chuyển về trang chủ sau 2s
+      // Chuyển hướng theo role sau 2s
       setTimeout(() => {
-        router.push('/');
+        if (data.role === 'customer') {
+          router.push('/customer');
+        } else {
+          router.push('/worker'); // hoặc trang thợ tương ứng
+        }
       }, 2000);
 
     } catch (err) {

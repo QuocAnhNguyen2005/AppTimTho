@@ -77,6 +77,7 @@ async function initDb() {
         experience_years VARCHAR(20),
         districts_active TEXT[],
         is_verified BOOLEAN DEFAULT FALSE,
+        is_online BOOLEAN DEFAULT TRUE,
         average_rating DECIMAL(3,2) DEFAULT 0.0,
         total_reviews INTEGER DEFAULT 0,
         balance DECIMAL(15,2) DEFAULT 0.0,

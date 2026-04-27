@@ -7,10 +7,13 @@ export default function WorkerDashboard() {
   const router = useRouter();
   const [worker, setWorker] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   
-  // Checkout Modal State
+  // UI State
+  const [activeTab, setActiveTab] = useState('PENDING');
+  const [isOnline, setIsOnline] = useState(true);
   const [checkoutJob, setCheckoutJob] = useState(null);
   const [totalPrice, setTotalPrice] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -18,54 +21,83 @@ export default function WorkerDashboard() {
   useEffect(() => {
     const saved = localStorage.getItem('user');
     const role = localStorage.getItem('role');
-    if (!saved) {
+    if (!saved || role !== 'worker') {
       router.push('/login');
       return;
     }
     const user = JSON.parse(saved);
-    if (role !== 'worker') {
-      alert('Bạn không có quyền truy cập trang này!');
-      router.push('/');
-      return;
-    }
-    
-    // Giả lập worker có balance (API auth hiện tại chưa trả về balance, tạm thời để 0, hoặc có thể thêm endpoint getProfile sau)
-    setWorker({ ...user, balance: user.balance || 0 });
-    fetchJobs(user.id);
+    setWorker(user);
+    loadAllData(user.id);
   }, [router]);
+
+  const loadAllData = async (workerId) => {
+    setLoading(true);
+    await Promise.all([
+      fetchJobs(workerId),
+      fetchStats(workerId)
+    ]);
+    setLoading(false);
+  };
 
   const fetchJobs = async (workerId) => {
     try {
-      setLoading(true);
       const res = await fetch(`http://localhost:5000/api/jobs/worker/${workerId}`);
-      if (!res.ok) throw new Error('Không thể tải danh sách đơn hàng');
-      const data = await res.json();
-      setJobs(data.jobs || []);
+      if (res.ok) {
+        const data = await res.json();
+        setJobs(data.jobs || []);
+      }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error(err);
     }
   };
 
-  const handleUpdateStatus = async (jobId, newStatus) => {
+  const fetchStats = async (workerId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/workers/${workerId}/dashboard-stats`);
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data.stats);
+        setReviews(data.latest_reviews || []);
+        setIsOnline(data.worker.is_online);
+        // Cập nhật lại worker data (bao gồm balance mới nhất)
+        setWorker(prev => ({...prev, ...data.worker}));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleOnlineStatus = async () => {
+    const newStatus = !isOnline;
+    setIsOnline(newStatus); // Optimistic UI
+    try {
+      await fetch(`http://localhost:5000/api/workers/${worker.id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_online: newStatus })
+      });
+    } catch (err) {
+      setIsOnline(!newStatus); // Rollback
+      alert('Không thể cập nhật trạng thái');
+    }
+  };
+
+  const handleUpdateJobStatus = async (jobId, newStatus) => {
     try {
       const res = await fetch(`http://localhost:5000/api/jobs/${jobId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error('Lỗi cập nhật trạng thái');
-      fetchJobs(worker.id);
+      if (res.ok) loadAllData(worker.id);
     } catch (err) {
-      alert(err.message);
+      alert('Lỗi cập nhật trạng thái');
     }
   };
 
   const handleCompleteJob = async () => {
     if (!totalPrice || isNaN(totalPrice) || Number(totalPrice) <= 0) {
-      alert('Vui lòng nhập số tiền hợp lệ');
-      return;
+      alert('Vui lòng nhập số tiền hợp lệ'); return;
     }
     setCheckoutLoading(true);
     try {
@@ -74,21 +106,13 @@ export default function WorkerDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ total_price: Number(totalPrice) }),
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(()=>({}));
-        throw new Error(errData.error || 'Lỗi nghiệm thu đơn hàng');
-      }
+      if (!res.ok) throw new Error('Lỗi nghiệm thu');
       
-      const data = await res.json();
-      alert(`Đã hoàn thành đơn hàng!\nDoanh thu của bạn: ${data.workerEarnings.toLocaleString('vi-VN')} VND\nPhí nền tảng (15.5%): ${data.adminFee.toLocaleString('vi-VN')} VND`);
-      
+      alert('Đã hoàn thành đơn hàng!');
       setCheckoutJob(null);
       setTotalPrice('');
-      fetchJobs(worker.id);
-      
-      // Update local worker balance
-      setWorker(prev => ({ ...prev, balance: Number(prev.balance) + data.workerEarnings }));
-      
+      loadAllData(worker.id);
+      setActiveTab('COMPLETED');
     } catch (err) {
       alert(err.message);
     } finally {
@@ -96,150 +120,231 @@ export default function WorkerDashboard() {
     }
   };
 
-  if (!worker) return null;
+  if (!worker || loading) return <div style={{textAlign: 'center', padding: '100px'}}>Đang tải dữ liệu...</div>;
+
+  const filteredJobs = jobs.filter(j => j.status === activeTab);
+  const completedJobsList = jobs.filter(j => j.status === 'COMPLETED').slice(0, 5); // Lấy 5 đơn gần nhất cho bảng sao kê
 
   return (
     <div style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh', padding: '100px 20px 40px' }}>
-      <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        {/* Header & Balance */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
+        {/* Hàng 1: Header + Online Toggle */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>Bảng điều khiển Thợ</h1>
-            <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '15px' }}>Quản lý các yêu cầu sửa chữa được giao cho bạn</p>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+              Chào ngày mới, {worker.full_name}! 👋
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '15px' }}>Hôm nay bạn muốn làm việc hay nghỉ ngơi?</p>
           </div>
-          <div style={{ 
-            backgroundColor: 'var(--accent-primary)', padding: '16px 24px', borderRadius: '16px', 
-            color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
-            boxShadow: '0 10px 25px rgba(59,130,246,0.3)'
-          }}>
-            <span style={{ fontSize: '13px', fontWeight: '600', opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Số dư ví (VNĐ)</span>
-            <span style={{ fontSize: '28px', fontWeight: '800', margin: '4px 0 0' }}>
-              {Number(worker.balance).toLocaleString('vi-VN')} ₫
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: 'white', padding: '12px 20px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <span style={{ fontWeight: '700', fontSize: '15px', color: isOnline ? '#10B981' : '#6B7280' }}>
+              {isOnline ? '🟢 Đang rảnh (Nhận khách)' : '🔴 Tạm nghỉ (Ẩn hồ sơ)'}
             </span>
+            <div 
+              onClick={toggleOnlineStatus}
+              style={{
+                width: '56px', height: '32px', borderRadius: '16px', backgroundColor: isOnline ? '#10B981' : '#E5E7EB',
+                position: 'relative', cursor: 'pointer', transition: 'background-color 0.3s'
+              }}
+            >
+              <div style={{
+                width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'white',
+                position: 'absolute', top: '4px', left: isOnline ? '28px' : '4px', transition: 'left 0.3s',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+              }} />
+            </div>
           </div>
         </div>
 
-        {/* Jobs List */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>Đang tải dữ liệu...</div>
-        ) : error ? (
-          <div style={{ padding: '20px', backgroundColor: '#FEF2F2', color: '#DC2626', borderRadius: '16px', textAlign: 'center' }}>{error}</div>
-        ) : jobs.length === 0 ? (
-          <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '60px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💤</div>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 8px' }}>Chưa có yêu cầu nào</h3>
-            <p style={{ color: 'var(--text-secondary)' }}>Hiện tại không có đơn hàng nào đang chờ bạn xử lý.</p>
+        {/* Hàng 2: Overview Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>💰 Số dư ví hiện tại</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--accent-primary)' }}>{Number(worker.balance).toLocaleString('vi-VN')} ₫</div>
           </div>
-        ) : (
-          <div style={{ display: 'grid', gap: '20px' }}>
-            {jobs.map(job => (
-              <div key={job.id} style={{ 
-                backgroundColor: 'white', borderRadius: '20px', padding: '24px',
-                borderLeft: job.status === 'PENDING' ? '4px solid #F59E0B' : job.status === 'ACCEPTED' ? '4px solid #3B82F6' : '4px solid #10B981',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                  <div>
-                    <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: '700' }}>Khách: {job.customer_name}</h3>
-                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>📞 {job.customer_phone}</p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Trạng thái</div>
-                    <div style={{ fontSize: '15px', fontWeight: '800', color: job.status === 'PENDING' ? '#F59E0B' : job.status === 'ACCEPTED' ? '#3B82F6' : '#10B981' }}>
-                      {job.status}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
-                    <div>
-                      <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Lịch hẹn</span>
-                      <strong style={{ fontSize: '14px' }}>{new Date(job.scheduled_time).toLocaleString('vi-VN')}</strong>
-                    </div>
-                    <div>
-                      <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Địa chỉ</span>
-                      <strong style={{ fontSize: '14px' }}>{job.address}</strong>
-                    </div>
-                  </div>
-                  <div>
-                    <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Mô tả vấn đề</span>
-                    <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--text-primary)' }}>{job.description}</p>
-                  </div>
-                  {job.status === 'COMPLETED' && (
-                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #E5E7EB' }}>
-                      <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Tổng tiền dịch vụ</span>
-                      <strong style={{ fontSize: '16px', color: '#10B981' }}>{Number(job.total_price).toLocaleString('vi-VN')} ₫</strong>
-                    </div>
-                  )}
-                </div>
-
-                {/* Hành động */}
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                  {job.status === 'PENDING' && (
-                    <>
-                      <button onClick={() => handleUpdateStatus(job.id, 'REJECTED')} style={{ padding: '10px 20px', borderRadius: '10px', border: '1px solid #FCA5A5', backgroundColor: '#FEF2F2', color: '#DC2626', fontWeight: '700', cursor: 'pointer' }}>
-                        Từ chối
-                      </button>
-                      <button onClick={() => handleUpdateStatus(job.id, 'ACCEPTED')} style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', backgroundColor: '#3B82F6', color: 'white', fontWeight: '700', cursor: 'pointer' }}>
-                        Nhận việc
-                      </button>
-                    </>
-                  )}
-                  {job.status === 'ACCEPTED' && (
-                    <button onClick={() => setCheckoutJob(job)} style={{ padding: '12px 24px', borderRadius: '10px', border: 'none', backgroundColor: '#10B981', color: 'white', fontWeight: '700', cursor: 'pointer', fontSize: '15px' }}>
-                      ✅ Hoàn thành & Nhận tiền
-                    </button>
-                  )}
-                </div>
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>📈 Thu nhập tháng này</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+              <div style={{ fontSize: '28px', fontWeight: '800', color: '#10B981' }}>{Number(stats?.monthly_income || 0).toLocaleString('vi-VN')} ₫</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: stats?.growth_rate >= 0 ? '#10B981' : '#DC2626', marginBottom: '4px', backgroundColor: stats?.growth_rate >= 0 ? '#D1FAE5' : '#FEE2E2', padding: '2px 8px', borderRadius: '8px' }}>
+                {stats?.growth_rate >= 0 ? '+' : ''}{stats?.growth_rate}%
               </div>
-            ))}
+            </div>
           </div>
-        )}
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>✅ Tổng đơn hoàn thành</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: '#3B82F6' }}>{stats?.completed_jobs || 0} <span style={{fontSize:'16px', color:'var(--text-secondary)'}}>đơn</span></div>
+          </div>
+          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>⭐ Điểm đánh giá</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: '#F59E0B' }}>
+              {worker.average_rating} <span style={{fontSize:'16px', color:'var(--text-secondary)'}}>/ 5.0 ({worker.total_reviews} đánh giá)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hàng 3: Main Content (Grid 65/35) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '30px' }}>
+          
+          {/* CỘT TRÁI: QUẢN LÝ ĐƠN HÀNG */}
+          <div>
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', backgroundColor: 'white', padding: '8px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+              {['PENDING', 'ACCEPTED', 'COMPLETED'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    flex: 1, padding: '12px', borderRadius: '12px', border: 'none', fontWeight: '700', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                    backgroundColor: activeTab === tab ? (tab==='PENDING'?'#FEE2E2':tab==='ACCEPTED'?'#DBEAFE':'#D1FAE5') : 'transparent',
+                    color: activeTab === tab ? (tab==='PENDING'?'#DC2626':tab==='ACCEPTED'?'#2563EB':'#059669') : 'var(--text-secondary)'
+                  }}
+                >
+                  {tab === 'PENDING' ? '🔥 Đơn Mới Gọi' : tab === 'ACCEPTED' ? '🛠️ Việc Hôm Nay' : '✅ Lịch Sử Hoàn Thành'}
+                </button>
+              ))}
+            </div>
+
+            {/* Danh sách đơn theo Tab */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {filteredJobs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: 'white', borderRadius: '20px' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '16px' }}>💤</div>
+                  <h3 style={{ color: 'var(--text-primary)' }}>Trống trải quá!</h3>
+                  <p style={{ color: 'var(--text-secondary)' }}>Không có đơn hàng nào ở mục này.</p>
+                </div>
+              ) : (
+                filteredJobs.map(job => (
+                  <div key={job.id} style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', borderLeft: activeTab==='PENDING'?'4px solid #DC2626':activeTab==='ACCEPTED'?'4px solid #2563EB':'4px solid #10B981' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div>
+                        <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: '700' }}>Khách: {job.customer_name}</h3>
+                        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '600' }}>📞 {job.customer_phone}</p>
+                      </div>
+                      {activeTab === 'PENDING' && (
+                        <div style={{ textAlign: 'right', color: '#DC2626', fontWeight: '700', fontSize: '13px', backgroundColor: '#FEE2E2', padding: '4px 12px', borderRadius: '12px', height: 'fit-content' }}>
+                          ⏱️ Mới (Đang chờ nhận)
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Lịch hẹn</span>
+                        <strong style={{ display: 'block', fontSize: '14px' }}>{new Date(job.scheduled_time).toLocaleString('vi-VN')}</strong>
+                      </div>
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Địa chỉ</span>
+                        <strong style={{ display: 'block', fontSize: '14px' }}>{job.address}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Mô tả vấn đề</span>
+                        <p style={{ margin: '4px 0 0', fontSize: '14px' }}>{job.description}</p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                      {activeTab === 'PENDING' && (
+                        <>
+                          <button onClick={() => handleUpdateJobStatus(job.id, 'REJECTED')} style={{ padding: '10px 20px', borderRadius: '10px', border: '1px solid #FCA5A5', backgroundColor: '#FEF2F2', color: '#DC2626', fontWeight: '700', cursor: 'pointer' }}>Từ chối</button>
+                          <button onClick={() => handleUpdateJobStatus(job.id, 'ACCEPTED')} style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', backgroundColor: '#DC2626', color: 'white', fontWeight: '700', cursor: 'pointer' }}>Chấp nhận ngay</button>
+                        </>
+                      )}
+                      {activeTab === 'ACCEPTED' && (
+                        <button onClick={() => setCheckoutJob(job)} style={{ padding: '12px 24px', borderRadius: '10px', border: 'none', backgroundColor: '#2563EB', color: 'white', fontWeight: '700', cursor: 'pointer' }}>Nghiệm thu & Báo giá</button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* CỘT PHẢI: ĐỐI SOÁT & VINH DANH */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            
+            {/* Sao kê tài chính */}
+            <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>📊 Sao kê đối soát (5 đơn gần nhất)</h3>
+                <span style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', cursor: 'pointer' }}>Xem tất cả</span>
+              </div>
+              
+              {completedJobsList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)', fontSize: '14px' }}>Chưa có giao dịch nào</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {completedJobsList.map(job => {
+                    const price = Number(job.total_price);
+                    const fee = price * 0.155;
+                    const earn = price - fee;
+                    return (
+                      <div key={job.id} style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', fontSize: '13px' }}>
+                        <div style={{ fontWeight: '700', marginBottom: '8px' }}>KH: {job.customer_name} ({new Date(job.created_at).toLocaleDateString('vi-VN')})</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>Tổng thu:</span>
+                          <strong>{price.toLocaleString('vi-VN')} ₫</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ color: '#DC2626' }}>Phí App (15.5%):</span>
+                          <strong style={{ color: '#DC2626' }}>-{fee.toLocaleString('vi-VN')} ₫</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '4px' }}>
+                          <span style={{ color: '#10B981', fontWeight: '700' }}>Thực nhận:</span>
+                          <strong style={{ color: '#10B981', fontSize: '15px' }}>+{earn.toLocaleString('vi-VN')} ₫</strong>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Vinh danh đánh giá */}
+            <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>❤️ Lời khen từ Khách</h3>
+                <span style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', cursor: 'pointer' }}>Xem tất cả</span>
+              </div>
+              
+              {reviews.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)', fontSize: '14px' }}>Chưa có đánh giá nào</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {reviews.map((rev, idx) => (
+                    <div key={idx} style={{ padding: '16px', backgroundColor: '#FFFBEB', borderRadius: '16px', border: '1px solid #FEF3C7' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <strong style={{ fontSize: '14px' }}>{rev.customer_name}</strong>
+                        <span style={{ color: '#F59E0B', fontSize: '14px' }}>{'⭐'.repeat(rev.rating)}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>"{rev.comment || 'Khách hàng không để lại bình luận'}"</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
       </div>
 
       {/* Checkout Modal */}
       {checkoutJob && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div style={{
-            backgroundColor: 'var(--bg-secondary)', borderRadius: '20px',
-            width: '100%', maxWidth: '400px', overflow: 'hidden',
-            boxShadow: '0 24px 60px rgba(0,0,0,0.2)',
-            padding: '24px'
-          }}>
-            <h2 style={{ margin: '0 0 16px', fontSize: '20px', color: 'var(--text-primary)' }}>Nghiệm thu đơn hàng</h2>
-            <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-              Vui lòng nhập tổng số tiền (VND) khách hàng cần thanh toán cho đơn sửa chữa này.
-            </p>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '32px' }}>
+            <h2 style={{ margin: '0 0 12px', fontSize: '22px' }}>Nghiệm thu đơn hàng</h2>
+            <p style={{ margin: '0 0 24px', color: 'var(--text-secondary)', fontSize: '14px' }}>Nhập tổng tiền (VND) khách hàng cần thanh toán.</p>
             
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '8px' }}>Tổng tiền dịch vụ (VND)</label>
             <input 
-              type="number" 
-              value={totalPrice}
-              onChange={(e) => setTotalPrice(e.target.value)}
-              placeholder="VD: 500000"
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid var(--border-color)', marginBottom: '24px', fontSize: '16px', fontWeight: '600' }}
+              type="number" value={totalPrice} onChange={(e) => setTotalPrice(e.target.value)} placeholder="Ví dụ: 500000"
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid var(--border-color)', marginBottom: '24px', fontSize: '18px', fontWeight: '700', outline: 'none' }}
             />
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={() => setCheckoutJob(null)}
-                disabled={checkoutLoading}
-                style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'none', border: '1.5px solid var(--border-color)', fontWeight: '700', cursor: 'pointer' }}>
-                Hủy
-              </button>
-              <button 
-                onClick={handleCompleteJob}
-                disabled={checkoutLoading}
-                style={{ flex: 1, padding: '12px', borderRadius: '12px', backgroundColor: '#10B981', color: 'white', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
-                {checkoutLoading ? 'Đang xử lý...' : 'Xác nhận'}
-              </button>
+              <button onClick={() => setCheckoutJob(null)} disabled={checkoutLoading} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'none', border: '2px solid var(--border-color)', fontWeight: '700', cursor: 'pointer' }}>Hủy</button>
+              <button onClick={handleCompleteJob} disabled={checkoutLoading} style={{ flex: 1, padding: '14px', borderRadius: '12px', backgroundColor: '#10B981', color: 'white', border: 'none', fontWeight: '700', cursor: 'pointer' }}>Xác nhận</button>
             </div>
           </div>
         </div>

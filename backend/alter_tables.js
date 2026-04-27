@@ -32,6 +32,12 @@ async function alterTables() {
       ADD COLUMN IF NOT EXISTS job_id UUID REFERENCES jobs(id) ON DELETE CASCADE;
     `);
 
+    // Thêm trạng thái Online/Offline cho Thợ
+    await client.query(`
+      ALTER TABLE workers 
+      ADD COLUMN IF NOT EXISTS is_online BOOLEAN DEFAULT TRUE;
+    `);
+
     console.log('✅ Đã cập nhật bảng workers, jobs, reviews thành công!');
   } catch (err) {
     console.error('❌ Lỗi khi cập nhật database:', err.message);

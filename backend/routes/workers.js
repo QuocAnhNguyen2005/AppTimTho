@@ -28,12 +28,8 @@ router.get('/search', async (req, res) => {
       conditions.push(`(
         w.full_name ILIKE $${paramIndex}
         OR w.phone_number ILIKE $${paramIndex}
-        OR EXISTS (
-          SELECT 1 FROM unnest(w.specialties) AS s WHERE s ILIKE $${paramIndex}
-        )
-        OR EXISTS (
-          SELECT 1 FROM unnest(w.districts_active) AS d WHERE d ILIKE $${paramIndex}
-        )
+        OR array_to_string(w.specialties, ' ') ILIKE $${paramIndex}
+        OR array_to_string(w.districts_active, ' ') ILIKE $${paramIndex}
       )`);
       values.push(keyword);
       paramIndex++;
@@ -91,7 +87,7 @@ router.get('/search', async (req, res) => {
 
   } catch (error) {
     console.error('Lỗi khi tìm kiếm thợ:', error);
-    res.status(500).json({ error: 'Lỗi server nội bộ' });
+    res.status(500).json({ error: 'Lỗi server nội bộ', details: error.message, stack: error.stack });
   }
 });
 
@@ -120,7 +116,7 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách thợ:', error);
-    res.status(500).json({ error: 'Lỗi server nội bộ' });
+    res.status(500).json({ error: 'Lỗi server nội bộ', details: error.message });
   }
 });
 

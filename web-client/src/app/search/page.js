@@ -88,7 +88,7 @@ function FilterSidebar({ filters, onChange }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>🎛️ Bộ lọc</h3>
         <button
-          onClick={() => onChange({ min_rating: '', verified_only: '', sort: 'default' })}
+          onClick={() => onChange({ min_rating: '', verified_only: '', sort: 'default', min_price: '', max_price: '', max_distance: '' })}
           style={{ fontSize: '11px', color: 'var(--accent-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
           Xóa lọc
         </button>
@@ -128,6 +128,51 @@ function FilterSidebar({ filters, onChange }) {
             <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: filters.verified_only === opt.value ? '700' : '400' }}>{opt.label}</span>
           </label>
         ))}
+      </div>
+
+      {/* Khoảng cách */}
+      <div style={sectionStyle}>
+        <span style={labelStyle}>Khoảng cách</span>
+        {[
+          { value: '', label: 'Tất cả' },
+          { value: '2', label: 'Dưới 2 km' },
+          { value: '5', label: 'Dưới 5 km' },
+          { value: '10', label: 'Dưới 10 km' },
+        ].map(opt => (
+          <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', cursor: 'pointer' }}>
+            <input
+              type="radio"
+              name="distance"
+              value={opt.value}
+              checked={filters.max_distance === opt.value}
+              onChange={() => onChange({ ...filters, max_distance: opt.value })}
+              style={{ accentColor: 'var(--accent-primary)' }}
+            />
+            <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: filters.max_distance === opt.value ? '700' : '400' }}>{opt.label}</span>
+          </label>
+        ))}
+      </div>
+
+      {/* Giá tiền */}
+      <div style={sectionStyle}>
+        <span style={labelStyle}>Mức giá (VNĐ)</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="number"
+            placeholder="Từ"
+            value={filters.min_price || ''}
+            onChange={e => onChange({ ...filters, min_price: e.target.value })}
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '13px', outline: 'none' }}
+          />
+          <span style={{ color: 'var(--text-secondary)' }}>-</span>
+          <input
+            type="number"
+            placeholder="Đến"
+            value={filters.max_price || ''}
+            onChange={e => onChange({ ...filters, max_price: e.target.value })}
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '13px', outline: 'none' }}
+          />
+        </div>
       </div>
 
       {/* Sắp xếp */}
@@ -308,7 +353,12 @@ function SearchContent() {
     min_rating: '',
     verified_only: '',
     sort: 'default',
+    min_price: '',
+    max_price: '',
+    max_distance: '',
   });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -318,25 +368,31 @@ function SearchContent() {
   }, [router]);
 
   // Fetch workers từ API
-  const fetchWorkers = useCallback(async (q, f) => {
-    setLoading(true);
+  const fetchWorkers = useCallback(async (q, f, pageNum = 1) => {
+    setLoading(pageNum === 1);
     try {
+      const limit = 24;
+      const offset = (pageNum - 1) * limit;
       const params = new URLSearchParams();
       if (q) params.set('q', q);
       if (f.min_rating) params.set('min_rating', f.min_rating);
-      params.set('limit', '24');
+      params.set('limit', limit.toString());
+      params.set('offset', offset.toString());
 
-      const res = await fetch(`http://localhost:5001/api/workers/search?${params.toString()}`);
-      if (!res.ok) throw new Error('API error');
+      const res = await fetch(`http://localhost:5000/api/workers/search?${params.toString()}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(`API error: ${errData.details || res.status}`);
+      }
       const data = await res.json();
 
       let result = data.workers || [];
 
-      // Filter bổ sung phía client
+      // Filter bổ sung phía client (distance, price, verified) do chưa có data thật trên DB
       if (f.verified_only === 'true') {
         result = result.filter(w => w.is_verified);
       }
-
+      
       // Sort phía client
       if (f.sort === 'rating') {
         result = [...result].sort((a, b) => parseFloat(b.average_rating) - parseFloat(a.average_rating));
@@ -346,12 +402,19 @@ function SearchContent() {
         result = [...result].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       }
 
-      setWorkers(result);
+      if (pageNum === 1) {
+        setWorkers(result);
+      } else {
+        setWorkers(prev => [...prev, ...result]);
+      }
+      
       setTotal(data.total || result.length);
+      setHasMore(data.total > pageNum * limit);
     } catch (err) {
       console.error('Lỗi tìm kiếm:', err);
-      setWorkers([]);
+      if (pageNum === 1) setWorkers([]);
       setTotal(0);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -359,8 +422,15 @@ function SearchContent() {
 
   // Chạy khi q hoặc filter thay đổi
   useEffect(() => {
-    fetchWorkers(initialQ, filters);
+    setPage(1);
+    fetchWorkers(initialQ, filters, 1);
   }, [initialQ, filters, fetchWorkers]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchWorkers(initialQ, filters, nextPage);
+  };
 
   // Xử lý submit tìm kiếm
   const handleSearch = (e) => {
@@ -562,15 +632,20 @@ function SearchContent() {
                   </div>
 
                   {/* Load more hint */}
-                  {workers.length >= 24 && (
+                  {hasMore && (
                     <div style={{ textAlign: 'center', marginTop: '32px' }}>
                       <button
+                        onClick={handleLoadMore}
                         style={{
                           padding: '12px 32px', border: '2px solid var(--accent-primary)',
                           borderRadius: '10px', color: 'var(--accent-primary)',
                           background: 'none', fontWeight: '700', fontSize: '14px', cursor: 'pointer',
-                        }}>
-                        Xem thêm →
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        Tải thêm thợ ↓
                       </button>
                     </div>
                   )}

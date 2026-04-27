@@ -79,6 +79,7 @@ async function initDb() {
         is_verified BOOLEAN DEFAULT FALSE,
         average_rating DECIMAL(3,2) DEFAULT 0.0,
         total_reviews INTEGER DEFAULT 0,
+        balance DECIMAL(15,2) DEFAULT 0.0,
         location_lat DECIMAL(10,8),
         location_lng DECIMAL(11,8),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -151,6 +152,7 @@ async function initDb() {
         scheduled_time TIMESTAMP NOT NULL,
         address TEXT NOT NULL,
         description TEXT NOT NULL,
+        total_price DECIMAL(15,2),
         status VARCHAR(50) DEFAULT 'PENDING',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

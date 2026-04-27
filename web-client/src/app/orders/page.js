@@ -10,6 +10,12 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Review Modal State
+  const [reviewJob, setReviewJob] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+
   // 1. Kiểm tra đăng nhập
   useEffect(() => {
     const saved = localStorage.getItem('user');
@@ -56,6 +62,31 @@ export default function OrdersPage() {
         return <span style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>Đã hủy</span>;
       default:
         return <span style={{ backgroundColor: '#F3F4F6', color: '#4B5563', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>{status}</span>;
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    try {
+      setReviewLoading(true);
+      const res = await fetch(`http://localhost:5000/api/jobs/${reviewJob.id}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment, customer_id: user.id }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(()=>({}));
+        throw new Error(errData.error || 'Lỗi khi đánh giá');
+      }
+      alert('Đánh giá thành công! Cảm ơn bạn đã đóng góp ý kiến.');
+      setReviewJob(null);
+      setRating(5);
+      setComment('');
+      // Refresh list to update UI or status if needed
+      fetchOrders(user.id);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setReviewLoading(false);
     }
   };
 
@@ -154,13 +185,83 @@ export default function OrdersPage() {
               </div>
 
               {/* Footer Card */}
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'right' }}>
-                Đã đặt lúc: {new Date(order.created_at).toLocaleString('vi-VN')}
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Đã đặt lúc: {new Date(order.created_at).toLocaleString('vi-VN')}
+                </div>
+                {order.status === 'COMPLETED' && (
+                  <button 
+                    onClick={() => setReviewJob(order)}
+                    style={{ padding: '8px 16px', backgroundColor: '#F59E0B', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                    ⭐ Đánh giá Thợ
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Review Modal */}
+      {reviewJob && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'var(--bg-secondary)', borderRadius: '20px',
+            width: '100%', maxWidth: '400px', overflow: 'hidden',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.2)',
+            padding: '24px'
+          }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '20px', color: 'var(--text-primary)' }}>Đánh giá dịch vụ</h2>
+            <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: '14px' }}>
+              Bạn cảm thấy hài lòng với thợ <strong style={{color: 'var(--accent-primary)'}}>{reviewJob.worker_name}</strong> chứ?
+            </p>
+            
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  style={{ 
+                    fontSize: '32px', background: 'none', border: 'none', cursor: 'pointer',
+                    color: star <= rating ? '#F59E0B' : '#E5E7EB', transition: 'color 0.2s'
+                  }}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <textarea 
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Chia sẻ trải nghiệm của bạn (tùy chọn)..."
+              rows={3}
+              style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid var(--border-color)', marginBottom: '24px', fontSize: '14px', resize: 'vertical' }}
+            />
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setReviewJob(null)}
+                disabled={reviewLoading}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'none', border: '1.5px solid var(--border-color)', fontWeight: '700', cursor: 'pointer' }}>
+                Đóng
+              </button>
+              <button 
+                onClick={handleReviewSubmit}
+                disabled={reviewLoading}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', backgroundColor: '#10B981', color: 'white', border: 'none', fontWeight: '700', cursor: 'pointer' }}>
+                {reviewLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

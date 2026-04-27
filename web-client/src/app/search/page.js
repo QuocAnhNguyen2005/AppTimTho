@@ -10,7 +10,7 @@
  *  - Main content: Grid các thẻ thợ từ API
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const SPECIALTY_ICONS = {
@@ -292,8 +292,8 @@ function SkeletonCard() {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────
-export default function SearchPage() {
+// ── Main Content ─────────────────────────────────────────────────
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q') || '';
@@ -581,5 +581,14 @@ export default function SearchPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Đang tải kết quả tìm kiếm...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 }

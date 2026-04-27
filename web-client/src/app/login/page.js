@@ -54,17 +54,23 @@ export default function LoginPage() {
         throw new Error(data.error || 'Sai thông tin đăng nhập');
       }
 
-      // Lưu role hoặc token nếu cần (hiện tại chỉ demo successMsg)
-      setSuccessMsg(`Đăng nhập thành công với vai trò: ${data.role === 'customer' ? 'Khách hàng' : 'Thợ'}. Đang chuyển hướng...`);
-      
-      // Chuyển hướng theo role sau 2s
+      // Lưu thông tin user vào localStorage để các trang sau đọc
+      localStorage.setItem('user', JSON.stringify(data.user || {}));
+      localStorage.setItem('role', data.role || '');
+
+      const roleLabel = data.role === 'customer' ? 'Khách hàng' : data.role === 'worker' ? 'Thợ' : 'Admin';
+      setSuccessMsg(`✅ Đăng nhập thành công (${roleLabel})! Đang chuyển hướng...`);
+
+      // Chuyển hướng ngay theo role
       setTimeout(() => {
-        if (data.role === 'customer') {
-          router.push('/customer');
+        if (data.role === 'admin') {
+          router.push('/admin');
+        } else if (data.role === 'worker') {
+          router.push('/worker');
         } else {
-          router.push('/worker'); // hoặc trang thợ tương ứng
+          router.push('/customer');
         }
-      }, 2000);
+      }, 800);
 
     } catch (err) {
       setErrorMsg(err.message);

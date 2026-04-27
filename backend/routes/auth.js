@@ -106,7 +106,25 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Vui lòng nhập tài khoản và mật khẩu' });
     }
 
-    // Ưu tiên tìm trong bảng Khách hàng (users) trước
+    // Kiểm tra bảng Admin trước (dùng username thay vì số điện thoại)
+    const adminResult = await db.query(
+      'SELECT id, username, password_hash, role FROM admins WHERE username = $1',
+      [phone_number]
+    );
+    if (adminResult.rows.length > 0) {
+      const admin = adminResult.rows[0];
+      const isValid = await bcrypt.compare(password, admin.password_hash);
+      if (isValid) {
+        delete admin.password_hash;
+        return res.status(200).json({
+          message: 'Đăng nhập Admin thành công',
+          role: 'admin',
+          user: { id: admin.id, full_name: admin.username, phone_number: admin.username }
+        });
+      }
+    }
+
+    // Tìm trong bảng Khách hàng (users)
     const userResult = await db.query('SELECT id, full_name, phone_number, password_hash, avatar_url FROM users WHERE phone_number = $1', [phone_number]);
     
     if (userResult.rows.length > 0) {

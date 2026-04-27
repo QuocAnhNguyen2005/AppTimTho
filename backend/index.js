@@ -13,6 +13,9 @@ app.use(express.json());
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+const workerRoutes = require('./routes/workers');
+app.use('/api/workers', workerRoutes);
+
 app.get('/', (req, res) => {
   res.send('API Tìm Thợ đang chạy...');
 });

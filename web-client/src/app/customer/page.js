@@ -1,161 +1,315 @@
-import React from 'react';
+"use client";
 
-export default function CustomerPortal() {
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+const SERVICES = [
+  { icon: '⚡', label: 'Sửa điện' },
+  { icon: '❄️', label: 'Điện lạnh' },
+  { icon: '🚰', label: 'Ống nước' },
+  { icon: '🔧', label: 'Cơ khí' },
+  { icon: '🪵', label: 'Mộc/Nội thất' },
+  { icon: '🧹', label: 'Vệ sinh' },
+  { icon: '🔒', label: 'Sửa khóa' },
+  { icon: '💡', label: 'Lắp đèn' },
+  { icon: '🖥️', label: 'Điện tử' },
+  { icon: '🏠', label: 'Xem thêm' },
+];
+
+const BANNERS = [
+  { gradient: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', title: 'Gọi thợ chỉ trong 5 phút', sub: 'Thợ đã xác minh · Giá minh bạch', cta: 'Đặt ngay' },
+  { gradient: 'linear-gradient(135deg, #0EA5E9 0%, #4F46E5 100%)', title: 'Giảm 20% vệ sinh điều hòa', sub: 'Áp dụng đến 30/04/2026', cta: 'Xem ưu đãi' },
+  { gradient: 'linear-gradient(135deg, #10B981 0%, #0EA5E9 100%)', title: 'Bảo dưỡng định kỳ', sub: 'Đăng ký gói tháng tiết kiệm 35%', cta: 'Tìm hiểu' },
+];
+
+const WORKERS = [
+  { name: 'Nguyễn Văn Hùng', specialty: 'Điện lạnh · Điện gia dụng', rating: 4.9, jobs: 237, distance: '0.8 km', verified: true, avatar: '👷' },
+  { name: 'Trần Minh Quân', specialty: 'Ống nước · Chống thấm', rating: 4.8, jobs: 184, distance: '1.2 km', verified: true, avatar: '🔧' },
+  { name: 'Lê Văn Đức', specialty: 'Điện tử · Sửa PC', rating: 4.7, jobs: 312, distance: '2.1 km', verified: true, avatar: '💡' },
+  { name: 'Phạm Thị Lan', specialty: 'Vệ sinh công nghiệp', rating: 4.9, jobs: 95, distance: '1.5 km', verified: false, avatar: '🧹' },
+  { name: 'Hoàng Văn Nam', specialty: 'Mộc · Nội thất', rating: 4.6, jobs: 156, distance: '3.0 km', verified: true, avatar: '🪵' },
+  { name: 'Đỗ Quốc Bảo', specialty: 'Sửa khóa · Cửa cuốn', rating: 4.8, jobs: 201, distance: '0.5 km', verified: true, avatar: '🔒' },
+  { name: 'Vũ Hải Đăng', specialty: 'Điện lạnh · Máy giặt', rating: 4.7, jobs: 143, distance: '1.9 km', verified: true, avatar: '❄️' },
+  { name: 'Ngô Thành Tâm', specialty: 'Lắp đặt điện · Đèn', rating: 4.5, jobs: 88, distance: '2.4 km', verified: false, avatar: '⚡' },
+];
+
+const RECENT_ORDERS = [
+  { id: '#DH001', service: 'Sửa điều hòa', worker: 'Nguyễn Văn Hùng', date: '25/04/2026', status: 'Hoàn thành', statusColor: '#10B981' },
+  { id: '#DH002', service: 'Thông tắc bồn cầu', worker: 'Trần Minh Quân', date: '22/04/2026', status: 'Hoàn thành', statusColor: '#10B981' },
+  { id: '#DH003', service: 'Sửa máy giặt', worker: 'Vũ Hải Đăng', date: '18/04/2026', status: 'Đã huỷ', statusColor: '#EF4444' },
+];
+
+export default function CustomerPage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const [search, setSearch] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [hoveredWorker, setHoveredWorker] = useState(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('user');
+    if (!saved) { router.push('/login'); return; }
+    try { setUser(JSON.parse(saved)); } catch { router.push('/login'); }
+  }, [router]);
+
+  useEffect(() => {
+    const t = setInterval(() => setBannerIndex(i => (i + 1) % BANNERS.length), 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
+
+  // Hàm xử lý tìm kiếm: Navigate sang /search?q=<keyword>
+  const handleSearch = (e) => {
+    e?.preventDefault();
+    const q = search.trim();
+    if (q) {
+      router.push(`/search?q=${encodeURIComponent(q)}`);
+    } else {
+      router.push('/search');
+    }
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
+
+  if (!user) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-primary)' }}>
+      <div style={{ fontSize: '32px', animation: 'spin 1s linear infinite' }}>⚙️</div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+
+  const banner = BANNERS[bannerIndex];
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <div className="max-w-md mx-auto bg-white dark:bg-gray-800 min-h-screen relative shadow-sm">
-        
-        {/* 1. Header */}
-        <div className="px-5 pt-6 pb-4 bg-white dark:bg-gray-800 sticky top-0 z-10 shadow-sm">
-          <div className="flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400 mb-1 cursor-pointer">
-            <span className="text-red-500">📍</span>
-            <span className="font-medium truncate">144 Xuân Thủy, Cầu Giấy</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', fontFamily: 'Outfit, sans-serif' }}>
+
+      {/* ── HEADER ─────────────────────────────────────────────── */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'var(--glass-bg)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border-color)' }}>
+        {/* Top mini bar */}
+        <div style={{ backgroundColor: 'var(--accent-primary)', padding: '5px 0' }}>
+          <div className="container" style={{ display: 'flex', justifyContent: 'flex-end', gap: '20px' }}>
+            {['Thông báo', 'Hỗ trợ', 'Về chúng tôi'].map(item => (
+              <a key={item} href="#" style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', fontWeight: '500' }}>{item}</a>
+            ))}
           </div>
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-              Chào buổi sáng, Nguyễn Văn A <span className="ml-2 text-2xl">👋</span>
-            </h1>
-            <button className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 relative text-gray-600 dark:text-gray-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+        </div>
+
+        {/* Main header row */}
+        <div className="container" style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '12px 24px' }}>
+          {/* Logo */}
+          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-primary)', whiteSpace: 'nowrap', cursor: 'pointer' }}
+            onClick={() => router.push('/customer')}>
+            App<span style={{ color: 'var(--text-primary)' }}>TimTho</span>
+          </div>
+
+          {/* Search */}
+          <div style={{ flex: 1, display: 'flex', maxWidth: '680px' }}>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Tìm thợ sửa điện, điều hòa, ống nước..."
+              style={{ flex: 1, padding: '10px 18px', border: '2px solid var(--accent-primary)', borderRight: 'none', borderRadius: '8px 0 0 8px', fontSize: '14px', outline: 'none', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+            />
+            <button
+              onClick={handleSearch}
+              style={{ padding: '10px 20px', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '0 8px 8px 0', cursor: 'pointer', fontWeight: '700', fontSize: '14px' }}>
+              🔍 Tìm
             </button>
           </div>
-        </div>
 
-        {/* 2. Search Bar & Banner */}
-        <div className="px-5 py-2">
-          <div className="relative mb-6">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <span className="text-gray-400 text-lg">🔍</span>
-            </div>
-            <input 
-              type="text" 
-              placeholder="Bạn đang cần sửa gì hôm nay?" 
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium placeholder-gray-500 dark:placeholder-gray-400"
-            />
-          </div>
+          {/* Right icons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
+            {/* Bell */}
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '22px', position: 'relative' }}>
+              🔔
+              <span style={{ position: 'absolute', top: '-4px', right: '-6px', width: '16px', height: '16px', backgroundColor: '#EF4444', borderRadius: '50%', fontSize: '10px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>3</span>
+            </button>
 
-          <div className="rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 p-5 text-white shadow-md relative overflow-hidden mb-8">
-            <div className="relative z-10 w-2/3">
-              <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-2 py-1 rounded-lg inline-block mb-2 text-white">Ưu đãi mới</span>
-              <h2 className="text-lg font-bold mb-1 leading-tight">Giảm 15% phí dịch vụ</h2>
-              <p className="text-sm text-blue-100 mb-3">Cho lần gọi thợ đầu tiên!</p>
-              <button className="bg-white text-blue-600 text-xs font-bold px-4 py-2 rounded-xl shadow-sm hover:bg-blue-50 transition-colors cursor-pointer">
-                Lấy Mã Ngay
-              </button>
-            </div>
-            <div className="absolute -right-6 -bottom-6 text-8xl opacity-20 transform -rotate-12">
-              🎁
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Lưới Danh Mục Dịch Vụ */}
-        <div className="px-5 mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Dịch Vụ Nổi Bật</h3>
-            <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Xem tất cả</button>
-          </div>
-          <div className="grid grid-cols-3 gap-x-4 gap-y-6">
-            {[
-              { icon: '❄️', name: 'Điện lạnh', color: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-500' },
-              { icon: '💧', name: 'Sửa ống nước', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-500' },
-              { icon: '🔌', name: 'Điện gia dụng', color: 'bg-orange-100 dark:bg-orange-900/40 text-orange-500' },
-              { icon: '💻', name: 'PC / Laptop', color: 'bg-purple-100 dark:bg-purple-900/40 text-purple-500' },
-              { icon: '🚪', name: 'Mộc & Nội thất', color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-500' },
-              { icon: '🧹', name: 'Vệ sinh', color: 'bg-teal-100 dark:bg-teal-900/40 text-teal-500' }
-            ].map((cat, idx) => (
-              <div key={idx} className="flex flex-col items-center group cursor-pointer">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-2 ${cat.color} group-hover:scale-105 transition-transform shadow-sm`}>
-                  {cat.icon}
-                </div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center leading-tight">
-                  {cat.name}
+            {/* User dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowUserMenu(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: '1.5px solid var(--border-color)', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: '20px' }}>👤</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user.full_name || 'Khách hàng'}
                 </span>
-              </div>
-            ))}
+                <span style={{ fontSize: '10px' }}>▼</span>
+              </button>
+
+              {showUserMenu && (
+                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.12)', minWidth: '180px', overflow: 'hidden', zIndex: 100 }}>
+                  {[
+                    { icon: '👤', label: 'Hồ sơ cá nhân', href: '/profile' },
+                    { icon: '📋', label: 'Lịch sử đơn hàng', href: '/orders' },
+                    { icon: '⚙️', label: 'Cài đặt', href: '/settings' },
+                  ].map(item => (
+                    <a key={item.label} href={item.href}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', borderBottom: '1px solid var(--border-color)' }}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                      {item.icon} {item.label}
+                    </a>
+                  ))}
+                  <button onClick={handleLogout}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: '#EF4444', fontSize: '14px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FEF2F2'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                    🚪 Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* 4. Thợ Uy Tín Gần Bạn */}
-        <div className="pl-5 mb-10 overflow-hidden">
-          <div className="flex justify-between items-center mb-4 pr-5">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Thợ Uy Tín Gần Bạn</h3>
+      <main>
+        {/* ── BANNER CAROUSEL + SIDE ──────────────────────────── */}
+        <section style={{ backgroundColor: 'var(--bg-hover)', padding: '20px 0' }}>
+          <div className="container" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+
+            {/* Main banner */}
+            <div style={{ borderRadius: '16px', background: banner.gradient, minHeight: '220px', display: 'flex', alignItems: 'center', padding: '36px 44px', position: 'relative', cursor: 'pointer', overflow: 'hidden', transition: 'background 0.5s' }}>
+              <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '8px', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase' }}>🔥 Ưu đãi hôm nay</div>
+                <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'white', marginBottom: '8px', lineHeight: '1.25' }}>{banner.title}</h2>
+                <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '14px', marginBottom: '20px' }}>{banner.sub}</p>
+                <button style={{ backgroundColor: 'white', color: 'var(--accent-primary)', border: 'none', padding: '10px 22px', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                  {banner.cta} →
+                </button>
+              </div>
+              <div style={{ fontSize: '120px', opacity: 0.08, position: 'absolute', right: '20px', bottom: '-10px', lineHeight: 1 }}>🔧</div>
+
+              {/* Dots */}
+              <div style={{ position: 'absolute', bottom: '14px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px' }}>
+                {BANNERS.map((_, i) => (
+                  <button key={i} onClick={() => setBannerIndex(i)}
+                    style={{ width: i === bannerIndex ? '20px' : '7px', height: '7px', borderRadius: '4px', backgroundColor: 'white', opacity: i === bannerIndex ? 1 : 0.45, border: 'none', cursor: 'pointer', transition: 'all 0.3s', padding: 0 }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Side banners */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)', padding: '18px 22px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: 'pointer' }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '5px' }}>⭐ Thợ nổi bật</div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: 'white' }}>Top thợ trong tuần</div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: '3px' }}>Đánh giá 4.9★ trở lên</div>
+              </div>
+              <div style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #0EA5E9 0%, #6366F1 100%)', padding: '18px 22px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: 'pointer' }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '5px' }}>🎁 Khuyến mãi</div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: 'white' }}>Đặt thợ lần đầu</div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: '3px' }}>Giảm ngay 50.000₫</div>
+              </div>
+            </div>
           </div>
-          <div className="flex overflow-x-auto pb-4 pr-5 -mx-5 px-5 space-x-4 snap-x hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <style dangerouslySetInnerHTML={{__html: `
-              .hide-scrollbar::-webkit-scrollbar { display: none; }
-            `}} />
-            
-            {[
-              { name: 'Trần Văn Cường', spec: 'Chuyên Điện lạnh', rating: '4.9', reviews: 120, dist: '1.2 km', avatar: 'https://i.pravatar.cc/150?img=11' },
-              { name: 'Lê Hoàng Hải', spec: 'Sửa ống nước', rating: '4.8', reviews: 85, dist: '2.5 km', avatar: 'https://i.pravatar.cc/150?img=33' },
-              { name: 'Phạm Đức Anh', spec: 'Điện gia dụng', rating: '5.0', reviews: 204, dist: '3.1 km', avatar: 'https://i.pravatar.cc/150?img=53' }
-            ].map((worker, idx) => (
-              <div key={idx} className="min-w-[240px] bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm snap-center flex-shrink-0">
-                <div className="flex items-start space-x-3 mb-3">
-                  <img src={worker.avatar} alt={worker.name} className="w-14 h-14 rounded-full object-cover border-2 border-gray-50 dark:border-gray-700" />
-                  <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white text-sm flex items-center">
-                      {worker.name}
-                    </h4>
-                    <div className="flex items-center mt-1 space-x-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded">Đã xác minh</span>
+        </section>
+
+        {/* ── SERVICE ICON ROW ────────────────────────────────── */}
+        <section style={{ backgroundColor: 'var(--bg-secondary)', padding: '18px 0', borderBottom: '1px solid var(--border-color)' }}>
+          <div className="container">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '4px' }}>
+              {SERVICES.map(s => (
+                <button key={s.label}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '7px', padding: '10px 6px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '10px', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                  <div style={{ width: '46px', height: '46px', borderRadius: '50%', backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '21px' }}>{s.icon}</div>
+                  <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center', lineHeight: '1.3' }}>{s.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── RECENT ORDERS ───────────────────────────────────── */}
+        <section style={{ padding: '24px 0 0' }}>
+          <div className="container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h2 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)' }}>📋 Đơn hàng gần đây</h2>
+              <a href="/orders" style={{ fontSize: '13px', color: 'var(--accent-primary)', fontWeight: '600' }}>Xem tất cả →</a>
+            </div>
+            <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+              {RECENT_ORDERS.map((order, i) => (
+                <div key={order.id} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 120px 100px', alignItems: 'center', padding: '13px 20px', borderBottom: i < RECENT_ORDERS.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-primary)' }}>{order.id}</span>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>{order.service}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>👷 {order.worker}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{order.date}</span>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: order.statusColor, backgroundColor: order.statusColor + '20', padding: '4px 10px', borderRadius: '20px', textAlign: 'center' }}>{order.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── WORKER GRID ─────────────────────────────────────── */}
+        <section style={{ padding: '24px 0 40px' }}>
+          <div className="container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div>
+                <h2 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)' }}>🏆 Thợ uy tín gần bạn</h2>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '3px' }}>Đã được xác minh danh tính và tay nghề</p>
+              </div>
+              <a href="/workers" style={{ fontSize: '13px', color: 'var(--accent-primary)', fontWeight: '600' }}>Xem tất cả →</a>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+              {WORKERS.map((w, i) => (
+                <div key={i}
+                  onMouseEnter={() => setHoveredWorker(i)}
+                  onMouseLeave={() => setHoveredWorker(null)}
+                  style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '14px', border: `1.5px solid ${hoveredWorker === i ? 'var(--accent-primary)' : 'var(--border-color)'}`, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', transform: hoveredWorker === i ? 'translateY(-4px)' : 'none', boxShadow: hoveredWorker === i ? '0 12px 30px rgba(79,70,229,0.15)' : 'var(--shadow-sm)' }}>
+
+                  {/* Avatar area */}
+                  <div style={{ background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', padding: '22px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                    <div style={{ width: '68px', height: '68px', borderRadius: '50%', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '34px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>{w.avatar}</div>
+                    {w.verified && (
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: 'var(--accent-primary)', color: 'white', fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '20px' }}>✓ XM</div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ padding: '12px 14px 14px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '3px' }}>{w.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '10px' }}>{w.specialty}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ color: '#F59E0B', fontSize: '13px', fontWeight: '600' }}>★ {w.rating.toFixed(1)}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{w.jobs} đơn</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>📍 {w.distance}</span>
                     </div>
+                    <button
+                      style={{ width: '100%', padding: '8px', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--accent-hover)'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--accent-primary)'}>
+                      Đặt ngay
+                    </button>
                   </div>
                 </div>
-                
-                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mb-4">
-                  <span className="font-medium text-gray-700 dark:text-gray-300">{worker.spec}</span>
-                  <div className="flex items-center">
-                    <span className="text-yellow-400 mr-1">⭐️</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{worker.rating}</span>
-                    <span className="ml-1">({worker.reviews})</span>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <button className="flex-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold py-2 rounded-xl text-xs hover:bg-blue-100 transition-colors cursor-pointer">
-                    Xem hồ sơ
-                  </button>
-                  <button className="flex-1 bg-blue-600 text-white font-bold py-2 rounded-xl text-xs hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200 dark:shadow-none cursor-pointer">
-                    Gọi ngay
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
 
-        {/* 5. Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-          <div className="max-w-md mx-auto flex justify-between px-6 py-3">
-            {[
-              { icon: '🏠', label: 'Trang chủ', active: true },
-              { icon: '📋', label: 'Đơn hàng', active: false },
-              { icon: '💬', label: 'Tin nhắn', active: false },
-              { icon: '👤', label: 'Tài khoản', active: false }
-            ].map((tab, idx) => (
-              <button key={idx} className="flex flex-col items-center space-y-1 cursor-pointer">
-                <span className={`text-xl ${!tab.active && 'opacity-60 grayscale'}`}>{tab.icon}</span>
-                <span className={`text-[10px] font-medium ${tab.active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                  {tab.label}
-                </span>
-                {tab.active && <div className="w-1 h-1 bg-blue-600 rounded-full mt-1"></div>}
-              </button>
-            ))}
+        {/* ── FOOTER CTA ──────────────────────────────────────── */}
+        <section style={{ backgroundColor: 'var(--accent-primary)', padding: '36px 0', textAlign: 'center' }}>
+          <div className="container">
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'white', marginBottom: '6px' }}>Bạn là thợ lành nghề?</h3>
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '14px', marginBottom: '18px' }}>Đăng ký nhận đơn và tăng thu nhập hàng ngày</p>
+            <a href="/register/worker" style={{ backgroundColor: 'white', color: 'var(--accent-primary)', padding: '11px 28px', borderRadius: '10px', fontWeight: '700', fontSize: '14px', display: 'inline-block' }}>
+              Tạo hồ sơ Thợ →
+            </a>
           </div>
-        </div>
-        
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

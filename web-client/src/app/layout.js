@@ -40,6 +40,7 @@ export default function RootLayout({ children }) {
             </div>
             {/* Menu điều hướng */}
             <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+              <a href="/orders" style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>Đơn hàng</a>
               <a href="#services" style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>Dịch vụ</a>
               <a href="/login" style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '16px' }}>Đăng nhập</a>
               {/* Nút đăng ký: dùng .btn-primary, dẫn tới trang chọn vai trò */}

@@ -668,8 +668,7 @@ function SearchContent() {
           onClose={() => setSelectedWorker(null)}
           onSuccess={() => {
             setSelectedWorker(null);
-            setSuccessToast('🎉 Đặt thợ thành công! Thợ sẽ liên hệ với bạn trong thời gian sớm nhất.');
-            setTimeout(() => setSuccessToast(''), 5000);
+            router.push('/orders');
           }}
         />
       )}

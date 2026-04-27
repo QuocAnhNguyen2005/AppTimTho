@@ -3,13 +3,9 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 
-// Hàm kiểm tra mật khẩu
+// Hàm kiểm tra mật khẩu - tối thiểu 6 ký tự
 function isValidPassword(password) {
-  if (!password || password.length < 8 || password.length > 16) return false;
-  if (!/[A-Z]/.test(password)) return false;
-  const digitCount = (password.match(/\d/g) || []).length;
-  if (digitCount < 4) return false;
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password)) return false;
+  if (!password || password.length < 6) return false;
   return true;
 }
 
@@ -24,7 +20,7 @@ router.post('/register/customer', async (req, res) => {
     }
 
     if (!isValidPassword(password)) {
-      return res.status(400).json({ error: 'Mật khẩu phải từ 8-16 ký tự, gồm ít nhất 1 chữ hoa, 4 chữ số và 1 ký tự đặc biệt' });
+      return res.status(400).json({ error: 'Mật khẩu phải có ít nhất 6 ký tự' });
     }
 
     // Check if phone already exists
@@ -66,7 +62,7 @@ router.post('/register/worker', async (req, res) => {
     }
 
     if (!isValidPassword(password)) {
-      return res.status(400).json({ error: 'Mật khẩu phải từ 8-16 ký tự, gồm ít nhất 1 chữ hoa, 4 chữ số và 1 ký tự đặc biệt' });
+      return res.status(400).json({ error: 'Mật khẩu phải có ít nhất 6 ký tự' });
     }
 
     // Check if phone already exists

@@ -44,7 +44,7 @@ async function initDb() {
     
     // Câu lệnh SQL để tạo cấu trúc CSDL
     const sql = `
-      DROP TABLE IF EXISTS payments, reviews, bookings, worker_services, categories, admins, workers, users CASCADE;
+      DROP TABLE IF EXISTS payments, reviews, bookings, jobs, worker_services, categories, admins, workers, users CASCADE;
 
       CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -141,6 +141,17 @@ async function initDb() {
         payment_method VARCHAR(50),
         status VARCHAR(50) DEFAULT 'PENDING',
         transaction_type VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS jobs (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        customer_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        worker_id UUID REFERENCES workers(id) ON DELETE CASCADE,
+        scheduled_time TIMESTAMP NOT NULL,
+        address TEXT NOT NULL,
+        description TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'PENDING',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;

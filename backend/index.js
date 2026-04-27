@@ -16,6 +16,9 @@ app.use('/api/auth', authRoutes);
 const workerRoutes = require('./routes/workers');
 app.use('/api/workers', workerRoutes);
 
+const jobRoutes = require('./routes/jobs');
+app.use('/api/jobs', jobRoutes);
+
 app.get('/', (req, res) => {
   res.send('API Tìm Thợ đang chạy...');
 });

@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import BookingModal from '../../components/BookingModal';
 
 const SPECIALTY_ICONS = {
   'Sửa điều hòa':          '❄️',
@@ -202,7 +203,7 @@ function FilterSidebar({ filters, onChange }) {
 }
 
 // ── Worker Card ───────────────────────────────────────────────
-function WorkerCard({ worker }) {
+function WorkerCard({ worker, onBook }) {
   const [hovered, setHovered] = useState(false);
   const icon = getIcon(worker.specialties || []);
   const rating = parseFloat(worker.average_rating) || 0;
@@ -303,6 +304,7 @@ function WorkerCard({ worker }) {
         )}
 
         <button
+          onClick={() => onBook(worker)}
           style={{
             width: '100%', padding: '9px',
             backgroundColor: hovered ? 'var(--accent-hover)' : 'var(--accent-primary)',
@@ -359,6 +361,8 @@ function SearchContent() {
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState(null);
+  const [successToast, setSuccessToast] = useState('');
 
   // Auth check
   useEffect(() => {
@@ -627,7 +631,7 @@ function SearchContent() {
                     gap: '16px',
                   }}>
                     {workers.map(w => (
-                      <WorkerCard key={w.id} worker={w} />
+                      <WorkerCard key={w.id} worker={w} onBook={setSelectedWorker} />
                     ))}
                   </div>
 
@@ -655,6 +659,40 @@ function SearchContent() {
           </div>
         </div>
       </main>
+
+      {/* Booking Modal */}
+      {selectedWorker && (
+        <BookingModal
+          worker={selectedWorker}
+          user={user}
+          onClose={() => setSelectedWorker(null)}
+          onSuccess={() => {
+            setSelectedWorker(null);
+            setSuccessToast('🎉 Đặt thợ thành công! Thợ sẽ liên hệ với bạn trong thời gian sớm nhất.');
+            setTimeout(() => setSuccessToast(''), 5000);
+          }}
+        />
+      )}
+
+      {/* Success Toast */}
+      {successToast && (
+        <div style={{
+          position: 'fixed', bottom: '30px', right: '30px', zIndex: 10000,
+          backgroundColor: '#10B981', color: 'white', padding: '16px 24px',
+          borderRadius: '12px', fontWeight: '600', fontSize: '14px',
+          boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)',
+          animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
+          {successToast}
+          <style>{`
+            @keyframes slideIn {
+              from { transform: translateX(100%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
+
     </div>
   );
 }

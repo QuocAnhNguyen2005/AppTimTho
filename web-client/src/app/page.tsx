@@ -6,8 +6,42 @@ import React from 'react';
  */
 export default function Home() {
   return (
-    <main style={{ paddingTop: '80px', fontFamily: 'var(--font-sans)' }}>
-      {/* Hero Section */}
+    <>
+      {/* ── NAVBAR ── */}
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid var(--border-color)',
+        height: '68px', display: 'flex', alignItems: 'center',
+      }}>
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          {/* Logo */}
+          <a href="/" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '-0.5px', textDecoration: 'none' }}>
+            App<span style={{ color: 'var(--text-primary)' }}>TimTho</span>
+          </a>
+
+          {/* Nav links */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+            <a href="#services" style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>Dịch vụ</a>
+            <a href="#about" style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>Về chúng tôi</a>
+          </nav>
+
+          {/* Auth Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <a href="/login"
+              style={{ padding: '9px 20px', borderRadius: '10px', border: '1.5px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '600', backgroundColor: 'white' }}>
+              Đăng nhập
+            </a>
+            <a href="/register"
+              style={{ padding: '9px 20px', borderRadius: '10px', backgroundColor: 'var(--accent-primary)', color: 'white', fontSize: '14px', fontWeight: '600', border: 'none', display: 'inline-block' }}>
+              Đăng ký
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <main style={{ paddingTop: '68px', fontFamily: 'var(--font-sans)' }}>
+        {/* Hero Section */}
       <section style={{ padding: '100px 0', textAlign: 'center', backgroundColor: 'var(--bg-hover)' }}>
         <div className="container">
           <h1 style={{ fontSize: '56px', fontWeight: '800', marginBottom: '24px', color: 'var(--text-primary)', lineHeight: '1.1', letterSpacing: '-1px' }}>
@@ -61,6 +95,7 @@ export default function Home() {
           </a>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

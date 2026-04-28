@@ -3,15 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface Order {
+  id: number;
+  worker_name: string;
+  worker_phone: string;
+  worker_avatar?: string;
+  status: string;
+  scheduled_time: string;
+  address: string;
+  description: string;
+  created_at: string;
+}
+
 export default function CustomerOrdersPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [orders, setOrders] = useState([]);
+  const [user, setUser] = useState<any>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Review Modal State
-  const [reviewJob, setReviewJob] = useState(null);
+  const [reviewJob, setReviewJob] = useState<Order | null>(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -26,31 +36,33 @@ export default function CustomerOrdersPage() {
     } catch { router.push('/login'); }
   }, [router]);
 
-  const fetchOrders = async (userId) => {
+  const fetchOrders = async (userId: number) => {
     try {
       setLoading(true);
       const res = await fetch(`http://localhost:5000/api/jobs/customer/${userId}`);
       if (!res.ok) throw new Error('Không thể tải lịch sử đơn hàng');
       const data = await res.json();
       setOrders(data.jobs || []);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'PENDING':    return <span style={{ backgroundColor: '#FEF3C7', color: '#D97706', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>Đang chờ thợ</span>;
-      case 'ACCEPTED':   return <span style={{ backgroundColor: '#DBEAFE', color: '#2563EB', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>Thợ đã nhận</span>;
-      case 'COMPLETED':  return <span style={{ backgroundColor: '#D1FAE5', color: '#059669', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>Đã hoàn thành</span>;
-      case 'CANCELLED':  return <span style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>Đã hủy</span>;
-      default:           return <span style={{ backgroundColor: '#F3F4F6', color: '#4B5563', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>{status}</span>;
-    }
+  const getStatusBadge = (status: string) => {
+    const map: Record<string, { bg: string; color: string; label: string }> = {
+      PENDING:   { bg: '#FEF3C7', color: '#D97706', label: 'Đang chờ thợ' },
+      ACCEPTED:  { bg: '#DBEAFE', color: '#2563EB', label: 'Thợ đã nhận' },
+      COMPLETED: { bg: '#D1FAE5', color: '#059669', label: 'Đã hoàn thành' },
+      CANCELLED: { bg: '#FEE2E2', color: '#DC2626', label: 'Đã hủy' },
+    };
+    const s = map[status] ?? { bg: '#F3F4F6', color: '#4B5563', label: status };
+    return <span style={{ backgroundColor: s.bg, color: s.color, padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>{s.label}</span>;
   };
 
   const handleReviewSubmit = async () => {
+    if (!reviewJob) return;
     try {
       setReviewLoading(true);
       const res = await fetch(`http://localhost:5000/api/jobs/${reviewJob.id}/review`, {
@@ -60,14 +72,14 @@ export default function CustomerOrdersPage() {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Lỗi khi đánh giá');
+        throw new Error((errData as any).error || 'Lỗi khi đánh giá');
       }
       alert('Đánh giá thành công! Cảm ơn bạn đã đóng góp ý kiến.');
       setReviewJob(null);
       setRating(5);
       setComment('');
       fetchOrders(user.id);
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message);
     } finally {
       setReviewLoading(false);
@@ -79,14 +91,12 @@ export default function CustomerOrdersPage() {
   return (
     <div style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh', padding: '40px 20px' }}>
       <div className="container" style={{ maxWidth: '800px', margin: '0 auto' }}>
-
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>Lịch sử Đơn hàng</h1>
             <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '15px' }}>Theo dõi trạng thái các yêu cầu sửa chữa của bạn</p>
           </div>
-          <button
-            onClick={() => router.push('/customer/home')}
+          <button onClick={() => router.push('/customer/home')}
             style={{ padding: '10px 20px', backgroundColor: 'white', border: '1.5px solid var(--border-color)', borderRadius: '12px', fontWeight: '600', cursor: 'pointer', color: 'var(--text-primary)' }}>
             Về trang chủ
           </button>
@@ -100,8 +110,7 @@ export default function CustomerOrdersPage() {
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
             <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 8px' }}>Chưa có đơn hàng nào</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Bạn chưa đặt thợ lần nào. Hãy tìm thợ và đặt ngay nhé!</p>
-            <button
-              onClick={() => router.push('/customer/search')}
+            <button onClick={() => router.push('/customer/search')}
               style={{ padding: '12px 24px', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>
               Tìm thợ ngay
             </button>
@@ -113,11 +122,8 @@ export default function CustomerOrdersPage() {
             <div key={order.id} style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', border: '1px solid var(--border-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#F3F4F6', overflow: 'hidden' }}>
-                    {order.worker_avatar
-                      ? <img src={order.worker_avatar} alt={order.worker_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👷‍♂️</div>
-                    }
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#F3F4F6', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                    {order.worker_avatar ? <img src={order.worker_avatar} alt={order.worker_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👷‍♂️'}
                   </div>
                   <div>
                     <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>{order.worker_name}</h3>
@@ -126,7 +132,6 @@ export default function CustomerOrdersPage() {
                 </div>
                 {getStatusBadge(order.status)}
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '8px' }}>Lịch hẹn</div>
@@ -143,7 +148,6 @@ export default function CustomerOrdersPage() {
                   <div style={{ fontSize: '14px', color: 'var(--text-primary)', backgroundColor: '#F9FAFB', padding: '12px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>{order.description}</div>
                 </div>
               </div>
-
               <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Đã đặt lúc: {new Date(order.created_at).toLocaleString('vi-VN')}</div>
                 {order.status === 'COMPLETED' && (
@@ -158,7 +162,6 @@ export default function CustomerOrdersPage() {
         </div>
       </div>
 
-      {/* Review Modal */}
       {reviewJob && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
           <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '20px', width: '100%', maxWidth: '400px', boxShadow: '0 24px 60px rgba(0,0,0,0.2)', padding: '24px' }}>
@@ -167,9 +170,9 @@ export default function CustomerOrdersPage() {
               Bạn cảm thấy hài lòng với thợ <strong style={{ color: 'var(--accent-primary)' }}>{reviewJob.worker_name}</strong> chứ?
             </p>
             <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
-              {[1, 2, 3, 4, 5].map(star => (
+              {[1,2,3,4,5].map(star => (
                 <button key={star} onClick={() => setRating(star)}
-                  style={{ fontSize: '32px', background: 'none', border: 'none', cursor: 'pointer', color: star <= rating ? '#F59E0B' : '#E5E7EB', transition: 'color 0.2s' }}>★</button>
+                  style={{ fontSize: '32px', background: 'none', border: 'none', cursor: 'pointer', color: star <= rating ? '#F59E0B' : '#E5E7EB' }}>★</button>
               ))}
             </div>
             <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="Chia sẻ trải nghiệm của bạn (tùy chọn)..." rows={3}

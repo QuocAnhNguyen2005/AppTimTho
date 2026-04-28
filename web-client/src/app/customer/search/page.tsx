@@ -4,7 +4,20 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import BookingModal from '../../../components/BookingModal';
 
-const SPECIALTY_ICONS = {
+interface Worker {
+  id: number;
+  full_name: string;
+  average_rating: string;
+  total_reviews: number;
+  specialties?: string[];
+  is_verified?: boolean;
+  avatar_url?: string;
+  districts_active?: string[];
+  experience_years?: number;
+  created_at?: string;
+}
+
+const SPECIALTY_ICONS: Record<string, string> = {
   'Sửa điều hòa': '❄️', 'Điện lạnh': '❄️', 'Sửa ống nước': '🚰',
   'Ống nước': '🚰', 'Chống thấm': '🌊', 'Sửa điện': '⚡',
   'Lắp đặt điện': '⚡', 'Sửa điện tử': '🖥️', 'Sửa PC': '💻',
@@ -13,7 +26,7 @@ const SPECIALTY_ICONS = {
   'Máy giặt': '🫧', 'Tủ lạnh': '🧊', 'Camera an ninh': '📷',
 };
 
-function getIcon(specialties = []) {
+function getIcon(specialties: string[] = []) {
   for (const s of specialties) {
     for (const [key, icon] of Object.entries(SPECIALTY_ICONS)) {
       if (s.toLowerCase().includes(key.toLowerCase())) return icon;
@@ -22,18 +35,26 @@ function getIcon(specialties = []) {
   return '🔧';
 }
 
-function FilterSidebar({ filters, onChange }) {
-  const labelStyle = { display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' };
-  const sectionStyle = { paddingBottom: '20px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)' };
+interface FilterState {
+  min_rating: string;
+  verified_only: string;
+  sort: string;
+  min_price: string;
+  max_price: string;
+  max_distance: string;
+}
+
+function FilterSidebar({ filters, onChange }: { filters: FilterState; onChange: (f: FilterState) => void }) {
+  const labelStyle: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' };
+  const sectionStyle: React.CSSProperties = { paddingBottom: '20px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)' };
+  const EMPTY_FILTERS: FilterState = { min_rating: '', verified_only: '', sort: 'default', min_price: '', max_price: '', max_distance: '' };
 
   return (
     <aside style={{ width: '240px', flexShrink: 0, backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '20px', height: 'fit-content', position: 'sticky', top: '90px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>🎛️ Bộ lọc</h3>
-        <button onClick={() => onChange({ min_rating: '', verified_only: '', sort: 'default', min_price: '', max_price: '', max_distance: '' })}
-          style={{ fontSize: '11px', color: 'var(--accent-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Xóa lọc</button>
+        <button onClick={() => onChange(EMPTY_FILTERS)} style={{ fontSize: '11px', color: 'var(--accent-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Xóa lọc</button>
       </div>
-
       <div style={sectionStyle}>
         <span style={labelStyle}>Số sao đánh giá</span>
         {[{ value: '', label: 'Tất cả' }, { value: '4.5', label: '⭐ 4.5 trở lên' }, { value: '4', label: '⭐ 4.0 trở lên' }, { value: '3', label: '⭐ 3.0 trở lên' }].map(opt => (
@@ -43,7 +64,6 @@ function FilterSidebar({ filters, onChange }) {
           </label>
         ))}
       </div>
-
       <div style={sectionStyle}>
         <span style={labelStyle}>Trạng thái thợ</span>
         {[{ value: '', label: 'Tất cả' }, { value: 'true', label: '✓ Đã xác minh' }].map(opt => (
@@ -53,7 +73,6 @@ function FilterSidebar({ filters, onChange }) {
           </label>
         ))}
       </div>
-
       <div>
         <span style={labelStyle}>Sắp xếp theo</span>
         {[{ value: 'default', label: '🏆 Phù hợp nhất' }, { value: 'rating', label: '⭐ Đánh giá cao nhất' }, { value: 'reviews', label: '📋 Nhiều đơn nhất' }, { value: 'newest', label: '🕒 Mới tham gia nhất' }].map(opt => (
@@ -67,11 +86,10 @@ function FilterSidebar({ filters, onChange }) {
   );
 }
 
-function WorkerCard({ worker, onBook }) {
+function WorkerCard({ worker, onBook }: { worker: Worker; onBook: (w: Worker) => void }) {
   const [hovered, setHovered] = useState(false);
-  const icon = getIcon(worker.specialties || []);
+  const icon = getIcon(worker.specialties);
   const rating = parseFloat(worker.average_rating) || 0;
-
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '16px', border: `1.5px solid ${hovered ? 'var(--accent-primary)' : 'var(--border-color)'}`, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s ease', transform: hovered ? 'translateY(-4px)' : 'none', boxShadow: hovered ? '0 12px 30px rgba(79,70,229,0.15)' : 'var(--shadow-sm)' }}>
@@ -79,9 +97,7 @@ function WorkerCard({ worker, onBook }) {
         <div style={{ width: '72px', height: '72px', borderRadius: '50%', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
           {worker.avatar_url ? <img src={worker.avatar_url} alt={worker.full_name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : icon}
         </div>
-        {worker.is_verified && (
-          <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: 'var(--accent-primary)', color: 'white', fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '20px' }}>✓ ĐÃ XM</div>
-        )}
+        {worker.is_verified && <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: 'var(--accent-primary)', color: 'white', fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '20px' }}>✓ ĐÃ XM</div>}
       </div>
       <div style={{ padding: '14px 16px 16px' }}>
         <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>{worker.full_name}</div>
@@ -123,17 +139,15 @@ function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q') || '';
-
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [searchInput, setSearchInput] = useState(initialQ);
-  const [workers, setWorkers] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [filters, setFilters] = useState({ min_rating: '', verified_only: '', sort: 'default', min_price: '', max_price: '', max_distance: '' });
+  const [filters, setFilters] = useState<FilterState>({ min_rating: '', verified_only: '', sort: 'default', min_price: '', max_price: '', max_distance: '' });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [selectedWorker, setSelectedWorker] = useState(null);
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('user');
@@ -141,60 +155,43 @@ function SearchContent() {
     try { setUser(JSON.parse(saved)); } catch { router.push('/login'); }
   }, [router]);
 
-  const fetchWorkers = useCallback(async (q, f, pageNum = 1) => {
+  const fetchWorkers = useCallback(async (q: string, f: FilterState, pageNum = 1) => {
     setLoading(pageNum === 1);
     try {
       const limit = 24;
-      const offset = (pageNum - 1) * limit;
       const params = new URLSearchParams();
       if (q) params.set('q', q);
       if (f.min_rating) params.set('min_rating', f.min_rating);
-      params.set('limit', limit.toString());
-      params.set('offset', offset.toString());
-
-      const res = await fetch(`http://localhost:5000/api/workers/search?${params.toString()}`);
+      params.set('limit', String(limit));
+      params.set('offset', String((pageNum - 1) * limit));
+      const res = await fetch(`http://localhost:5000/api/workers/search?${params}`);
       if (!res.ok) throw new Error('API error');
       const data = await res.json();
-
-      let result = data.workers || [];
+      let result: Worker[] = data.workers || [];
       if (f.verified_only === 'true') result = result.filter(w => w.is_verified);
       if (f.sort === 'rating') result = [...result].sort((a, b) => parseFloat(b.average_rating) - parseFloat(a.average_rating));
       else if (f.sort === 'reviews') result = [...result].sort((a, b) => b.total_reviews - a.total_reviews);
-      else if (f.sort === 'newest') result = [...result].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
       if (pageNum === 1) setWorkers(result);
       else setWorkers(prev => [...prev, ...result]);
-      setTotal(data.total || result.length);
       setHasMore(data.total > pageNum * limit);
-    } catch (err) {
-      console.error('Lỗi tìm kiếm:', err);
+    } catch {
       if (pageNum === 1) setWorkers([]);
-      setTotal(0);
       setHasMore(false);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    setPage(1);
-    fetchWorkers(initialQ, filters, 1);
-  }, [initialQ, filters, fetchWorkers]);
+  useEffect(() => { setPage(1); fetchWorkers(initialQ, filters, 1); }, [initialQ, filters, fetchWorkers]);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     const q = searchInput.trim();
     router.push(q ? `/customer/search?q=${encodeURIComponent(q)}` : '/customer/search');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('role');
-    router.push('/login');
-  };
+  const handleLogout = () => { localStorage.removeItem('user'); localStorage.removeItem('role'); router.push('/login'); };
 
   if (!user) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-primary)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ fontSize: '32px', animation: 'spin 1s linear infinite' }}>⚙️</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -202,18 +199,14 @@ function SearchContent() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', fontFamily: 'Outfit, sans-serif' }}>
-
-      {/* ── HEADER ── */}
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'var(--glass-bg)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border-color)' }}>
         <div style={{ backgroundColor: 'var(--accent-primary)', padding: '5px 0' }}>
           <div className="container" style={{ display: 'flex', justifyContent: 'flex-end', gap: '20px' }}>
-            {['Thông báo', 'Hỗ trợ', 'Về chúng tôi'].map(item => (
-              <a key={item} href="#" style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', fontWeight: '500' }}>{item}</a>
-            ))}
+            {['Thông báo', 'Hỗ trợ', 'Về chúng tôi'].map(item => <a key={item} href="#" style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', fontWeight: '500' }}>{item}</a>)}
           </div>
         </div>
         <div className="container" style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '12px 24px' }}>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-primary)', whiteSpace: 'nowrap', cursor: 'pointer' }} onClick={() => router.push('/customer/home')}>
+          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent-primary)', cursor: 'pointer' }} onClick={() => router.push('/customer/home')}>
             App<span style={{ color: 'var(--text-primary)' }}>TimTho</span>
           </div>
           <form onSubmit={handleSearch} style={{ flex: 1, display: 'flex', maxWidth: '680px' }}>
@@ -221,24 +214,20 @@ function SearchContent() {
               style={{ flex: 1, padding: '10px 18px', border: '2px solid var(--accent-primary)', borderRight: 'none', borderRadius: '8px 0 0 8px', fontSize: '14px', outline: 'none', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
             <button type="submit" style={{ padding: '10px 20px', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '0 8px 8px 0', cursor: 'pointer', fontWeight: '700', fontSize: '14px' }}>🔍 Tìm</button>
           </form>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
-            <div style={{ position: 'relative' }}>
-              <button onClick={() => setShowUserMenu(v => !v)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: '1.5px solid var(--border-color)', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: 'var(--text-primary)' }}>
-                <span style={{ fontSize: '20px' }}>👤</span>
-                <span style={{ fontSize: '13px', fontWeight: '600' }}>{user.full_name || 'Khách hàng'}</span>
-                <span style={{ fontSize: '10px' }}>▼</span>
-              </button>
-              {showUserMenu && (
-                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.12)', minWidth: '180px', overflow: 'hidden', zIndex: 100 }}>
-                  <a href="/customer/home" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', borderBottom: '1px solid var(--border-color)' }}>🏠 Trang chủ</a>
-                  <a href="/customer/orders" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', borderBottom: '1px solid var(--border-color)' }}>📋 Lịch sử đơn</a>
-                  <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: '#EF4444', fontSize: '14px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                    🚪 Đăng xuất
-                  </button>
-                </div>
-              )}
-            </div>
+          <div style={{ marginLeft: 'auto', position: 'relative' }}>
+            <button onClick={() => setShowUserMenu(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: '1.5px solid var(--border-color)', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: 'var(--text-primary)' }}>
+              <span style={{ fontSize: '20px' }}>👤</span>
+              <span style={{ fontSize: '13px', fontWeight: '600' }}>{user.full_name || 'Khách hàng'}</span>
+              <span style={{ fontSize: '10px' }}>▼</span>
+            </button>
+            {showUserMenu && (
+              <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.12)', minWidth: '180px', overflow: 'hidden', zIndex: 100 }}>
+                <a href="/customer/home" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', borderBottom: '1px solid var(--border-color)' }}>🏠 Trang chủ</a>
+                <a href="/customer/orders" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', borderBottom: '1px solid var(--border-color)' }}>📋 Lịch sử đơn</a>
+                <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: '#EF4444', fontSize: '14px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>🚪 Đăng xuất</button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -251,24 +240,10 @@ function SearchContent() {
               <span>›</span><span>Tìm kiếm</span>
               {initialQ && <><span>›</span><span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>"{initialQ}"</span></>}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <h1 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {initialQ ? `Kết quả cho "${initialQ}"` : 'Tất cả thợ'}
-                </h1>
-                {!loading && <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>Tìm thấy <strong style={{ color: 'var(--accent-primary)' }}>{workers.length}</strong> thợ phù hợp</p>}
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {['Điện lạnh', 'Ống nước', 'Sửa điện', 'Vệ sinh', 'Thợ mộc'].map(cat => (
-                  <button key={cat} onClick={() => { setSearchInput(cat); router.push(`/customer/search?q=${encodeURIComponent(cat)}`); }}
-                    style={{ padding: '5px 12px', borderRadius: '20px', border: '1.5px solid var(--border-color)', backgroundColor: initialQ === cat ? 'var(--accent-primary)' : 'var(--bg-secondary)', color: initialQ === cat ? 'white' : 'var(--text-secondary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <h1 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)' }}>
+              {initialQ ? `Kết quả cho "${initialQ}"` : 'Tất cả thợ'}
+            </h1>
           </div>
-
           <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
             <FilterSidebar filters={filters} onChange={setFilters} />
             <div style={{ flex: 1, minWidth: 0 }}>

@@ -126,8 +126,8 @@ export default function WorkerDashboard() {
   const completedJobsList = jobs.filter(j => j.status === 'COMPLETED').slice(0, 5); // Lấy 5 đơn gần nhất cho bảng sao kê
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh', padding: '100px 20px 40px' }}>
-      <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <>
+      <div style={{ paddingBottom: '40px' }}>
         
         {/* Hàng 1: Header + Online Toggle */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -406,6 +406,6 @@ export default function WorkerDashboard() {
       >
         🆘
       </div>
-    </div>
+    </>
   );
 }

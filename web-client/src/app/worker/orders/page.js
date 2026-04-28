@@ -90,14 +90,12 @@ export default function WorkerOrdersPage() {
   if (loading) return <div style={{ textAlign: 'center', padding: '100px' }}>Đang tải dữ liệu...</div>;
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh', padding: '40px 20px' }}>
-      <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+    <>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         
-        {/* Header & Breadcrumb */}
+        {/* Header */}
         <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button onClick={() => router.push('/worker/dashboard')} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--border-color)', backgroundColor: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
-            ←
-          </button>
+
           <div>
             <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '800' }}>Quản lý Đơn hàng</h1>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>Xem và quản lý tất cả đơn hàng của bạn</p>
@@ -249,6 +247,7 @@ export default function WorkerOrdersPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

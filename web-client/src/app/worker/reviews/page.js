@@ -88,14 +88,11 @@ export default function WorkerReviewsPage() {
   ];
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh', padding: '40px 20px' }}>
-      <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+    <>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         
         {/* Header */}
         <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button onClick={() => router.push('/worker/dashboard')} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--border-color)', backgroundColor: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
-            ←
-          </button>
           <div>
             <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '800' }}>Uy tín & Hồ sơ</h1>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>Lắng nghe khách hàng và nâng cấp kỹ năng</p>
@@ -203,6 +200,6 @@ export default function WorkerReviewsPage() {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

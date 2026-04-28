@@ -118,14 +118,11 @@ export default function WorkerWalletPage() {
   const maxChartValue = Math.max(...chartData.map(d => d.total), 100000); // Tối thiểu cột max là 100k để biểu đồ đỡ bị kịch trần nếu thu nhập thấp
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh', padding: '40px 20px' }}>
-      <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+    <>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         
         {/* Header */}
         <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button onClick={() => router.push('/worker/dashboard')} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--border-color)', backgroundColor: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
-            ←
-          </button>
           <div>
             <h1 style={{ margin: '0 0 4px', fontSize: '24px', fontWeight: '800' }}>Ví & Thu nhập</h1>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>Quản lý số dư và đối soát dòng tiền</p>
@@ -247,6 +244,7 @@ export default function WorkerWalletPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

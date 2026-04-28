@@ -158,14 +158,26 @@ export default function WorkerDashboard() {
           </div>
         </div>
 
+        {/* Alert Banner */}
+        <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', color: '#B91C1C', padding: '12px 20px', borderRadius: '12px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: '600' }}>
+          <span style={{ fontSize: '20px' }}>⚠️</span>
+          <p style={{ margin: 0 }}>Cảnh báo lừa đảo: Không yêu cầu khách chuyển khoản ngoài hệ thống. Mọi giao dịch qua ví AppTimTho đều được bảo vệ 100%.</p>
+        </div>
+
         {/* Hàng 2: Overview Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>💰 Số dư ví hiện tại</div>
+          <div onClick={() => router.push('/worker/wallet')} style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', cursor: 'pointer', transition: 'transform 0.2s', ':hover': {transform: 'translateY(-4px)'} }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>💰 Số dư ví hiện tại</span>
+              <span style={{color: '#9CA3AF'}}>➔</span>
+            </div>
             <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--accent-primary)' }}>{Number(worker.balance).toLocaleString('vi-VN')} ₫</div>
           </div>
-          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>📈 Thu nhập tháng này</div>
+          <div onClick={() => router.push('/worker/wallet')} style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', cursor: 'pointer', transition: 'transform 0.2s' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>📈 Thu nhập tháng này</span>
+              <span style={{color: '#9CA3AF'}}>➔</span>
+            </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
               <div style={{ fontSize: '28px', fontWeight: '800', color: '#10B981' }}>{Number(stats?.monthly_income || 0).toLocaleString('vi-VN')} ₫</div>
               <div style={{ fontSize: '14px', fontWeight: '700', color: stats?.growth_rate >= 0 ? '#10B981' : '#DC2626', marginBottom: '4px', backgroundColor: stats?.growth_rate >= 0 ? '#D1FAE5' : '#FEE2E2', padding: '2px 8px', borderRadius: '8px' }}>
@@ -173,12 +185,18 @@ export default function WorkerDashboard() {
               </div>
             </div>
           </div>
-          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>✅ Tổng đơn hoàn thành</div>
+          <div onClick={() => router.push('/worker/orders')} style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', cursor: 'pointer', transition: 'transform 0.2s' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>✅ Tổng đơn hoàn thành</span>
+              <span style={{color: '#9CA3AF'}}>➔</span>
+            </div>
             <div style={{ fontSize: '28px', fontWeight: '800', color: '#3B82F6' }}>{stats?.completed_jobs || 0} <span style={{fontSize:'16px', color:'var(--text-secondary)'}}>đơn</span></div>
           </div>
-          <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>⭐ Điểm đánh giá</div>
+          <div onClick={() => router.push('/worker/reviews')} style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', cursor: 'pointer', transition: 'transform 0.2s' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>⭐ Điểm đánh giá</span>
+              <span style={{color: '#9CA3AF'}}>➔</span>
+            </div>
             <div style={{ fontSize: '28px', fontWeight: '800', color: '#F59E0B' }}>
               {worker.average_rating} <span style={{fontSize:'16px', color:'var(--text-secondary)'}}>/ 5.0 ({worker.total_reviews} đánh giá)</span>
             </div>
@@ -265,11 +283,35 @@ export default function WorkerDashboard() {
           {/* CỘT PHẢI: ĐỐI SOÁT & VINH DANH */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
+            {/* Lịch Hẹn Sắp Tới (Mini Calendar/Timeline) */}
+            <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>📅 Lịch hẹn sắp tới</h3>
+                <span onClick={() => router.push('/worker/orders')} style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', cursor: 'pointer' }}>Xem tất cả</span>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderLeft: '2px solid #E5E7EB', paddingLeft: '16px', marginLeft: '8px' }}>
+                {jobs.filter(j => j.status === 'ACCEPTED').slice(0, 3).map((job, idx) => (
+                  <div key={idx} style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: '-23px', top: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#2563EB', border: '3px solid white' }} />
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '4px' }}>
+                      {new Date(job.scheduled_time).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})} - {new Date(job.scheduled_time).toLocaleDateString('vi-VN')}
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '700' }}>{job.customer_name} ({job.customer_phone})</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>📍 {job.address}</div>
+                  </div>
+                ))}
+                {jobs.filter(j => j.status === 'ACCEPTED').length === 0 && (
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Không có lịch hẹn sắp tới.</div>
+                )}
+              </div>
+            </div>
+
             {/* Sao kê tài chính */}
             <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>📊 Sao kê đối soát (5 đơn gần nhất)</h3>
-                <span style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', cursor: 'pointer' }}>Xem tất cả</span>
+                <span onClick={() => router.push('/worker/wallet')} style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', cursor: 'pointer' }}>Xem tất cả</span>
               </div>
               
               {completedJobsList.length === 0 ? (
@@ -306,7 +348,7 @@ export default function WorkerDashboard() {
             <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>❤️ Lời khen từ Khách</h3>
-                <span style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', cursor: 'pointer' }}>Xem tất cả</span>
+                <span onClick={() => router.push('/worker/reviews')} style={{ fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '700', cursor: 'pointer' }}>Xem tất cả</span>
               </div>
               
               {reviews.length === 0 ? (
@@ -349,6 +391,21 @@ export default function WorkerDashboard() {
           </div>
         </div>
       )}
+      {/* SOS Button */}
+      <div 
+        onClick={() => alert('Đang kết nối đến Hotline Hỗ Trợ Khẩn Cấp của Admin...')}
+        style={{
+          position: 'fixed', bottom: '30px', right: '30px', width: '60px', height: '60px',
+          backgroundColor: '#EF4444', color: 'white', borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(239, 68, 68, 0.4)', cursor: 'pointer',
+          zIndex: 100, fontSize: '24px', fontWeight: '900', transition: 'transform 0.2s',
+          ':hover': { transform: 'scale(1.1)' }
+        }}
+        title="Trợ giúp khẩn cấp"
+      >
+        🆘
+      </div>
     </div>
   );
 }

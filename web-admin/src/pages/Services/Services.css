@@ -1,0 +1,196 @@
+/* ─── Services Page ─────────────────────────────────────────────────────────── */
+
+.services-page { display: flex; flex-direction: column; gap: 20px; }
+
+.services-summary { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+
+.summary-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  background: rgba(16,185,129,0.1);
+  color: var(--success);
+  border: 1px solid rgba(16,185,129,0.2);
+}
+
+.summary-chip span { font-weight: 700; font-size: 1rem; }
+
+.inactive-chip {
+  background: rgba(107,114,128,0.1);
+  color: var(--text-secondary);
+  border-color: rgba(107,114,128,0.2);
+}
+
+/* Category List */
+.category-list { display: flex; flex-direction: column; gap: 14px; }
+
+.category-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.2s;
+}
+
+.category-card.inactive { opacity: 0.65; }
+
+.category-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+
+/* Card Header */
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cat-icon {
+  font-size: 1.8rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.cat-info { flex: 1; min-width: 0; }
+
+.cat-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.cat-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.cat-tag {
+  padding: 3px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.cat-tag.accent {
+  background: rgba(99,102,241,0.1);
+  border-color: rgba(99,102,241,0.2);
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.cat-actions { flex-shrink: 0; }
+
+.toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.toggle-btn.on { color: var(--success); }
+.toggle-btn.off { color: var(--text-secondary); }
+
+.cat-chevron { color: var(--text-secondary); flex-shrink: 0; }
+
+/* Card Body */
+.cat-body {
+  border-top: 1px solid var(--border-color);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.cat-section { display: flex; flex-direction: column; gap: 12px; }
+
+.cat-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cat-section-header h5 { font-size: 0.875rem; font-weight: 600; }
+
+/* Commission Editor */
+.commission-editor {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: 16px;
+  background: var(--bg-primary);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.comm-field { display: flex; flex-direction: column; gap: 6px; }
+
+.comm-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input-suffix-wrap { display: flex; align-items: center; gap: 0; }
+
+.input-suffix-wrap input {
+  width: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-right: none;
+  border-radius: 7px 0 0 7px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-suffix-wrap input:focus { border-color: var(--accent-primary); }
+
+.input-suffix {
+  padding: 8px 10px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 0 7px 7px 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.comm-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Pricing Table */
+.pricing-table { margin-top: 0; }
+
+.pricing-row td { font-size: 0.875rem; }
+
+.price-cell { font-variant-numeric: tabular-nums; color: var(--success); font-weight: 500; }
+
+.inline-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--accent-primary);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.83rem;
+  outline: none;
+}
+
+.inline-input.small { width: 100px; }

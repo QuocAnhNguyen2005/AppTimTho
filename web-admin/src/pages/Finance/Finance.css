@@ -1,0 +1,272 @@
+/* ─── Finance Page ────────────────────────────────────────────────────────── */
+
+.finance-page { display: flex; flex-direction: column; gap: 20px; }
+
+.pending-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+/* Bookings Layout */
+.bookings-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 1024px) { .bookings-layout { grid-template-columns: 1fr; } }
+
+/* Map Card */
+.map-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: rgba(239,68,68,0.12);
+  color: var(--danger);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  animation: pulseBadge 1.5s infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.live-map-container {
+  position: relative;
+  height: 280px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      var(--border-color) 0px, var(--border-color) 1px,
+      transparent 1px, transparent 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--border-color) 0px, var(--border-color) 1px,
+      transparent 1px, transparent 40px
+    ),
+    var(--bg-primary);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.live-map-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 1;
+}
+
+.live-map-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+.live-map-sub { font-size: 0.78rem; color: var(--text-secondary); max-width: 220px; }
+
+.map-dot {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  animation: popIn 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+  z-index: 2;
+}
+
+.map-dot:hover { transform: scale(1.3); }
+
+@keyframes popIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* Booking List */
+.card-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.filter-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #fff;
+}
+
+.booking-list { display: flex; flex-direction: column; gap: 10px; }
+
+.booking-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.booking-row:hover { background: var(--bg-hover); }
+
+.booking-id-col { flex-shrink: 0; }
+
+.booking-id {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  background: rgba(99,102,241,0.1);
+  color: var(--accent-primary);
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.booking-main { flex: 1; min-width: 0; }
+
+.booking-parties {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.booking-arrow { color: var(--text-secondary); }
+
+.booking-details {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.booking-amount { font-weight: 600; color: var(--success); }
+
+/* Withdrawal */
+.withdrawal-summary {
+  display: flex;
+  gap: 24px;
+  padding: 16px 20px;
+  background: var(--bg-primary);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.ws-item { display: flex; flex-direction: column; gap: 4px; }
+
+.ws-item p { font-size: 0.78rem; color: var(--text-secondary); }
+.ws-item strong { font-size: 1.05rem; }
+
+.bank-info { display: flex; flex-direction: column; gap: 2px; }
+.bank-name { font-weight: 600; font-size: 0.875rem; }
+.bank-acc { font-size: 0.75rem; color: var(--text-secondary); font-family: monospace; }
+
+.withdrawal-amount { font-size: 1rem; font-weight: 700; color: var(--danger); }
+
+.balance-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  background: rgba(16,185,129,0.08);
+  color: var(--success);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.row-paid { opacity: 0.65; }
+
+/* Status badge with icon */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Export Section */
+.export-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.08));
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.export-info { display: flex; align-items: center; gap: 14px; }
+
+.export-icon { color: var(--accent-primary); flex-shrink: 0; }
+
+.export-title { font-size: 1rem; font-weight: 600; }
+.export-sub { font-size: 0.82rem; color: var(--text-secondary); margin-top: 3px; }
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  background: linear-gradient(135deg, var(--accent-primary), #8B5CF6);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+}
+
+.btn-export:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.btn-export:disabled { opacity: 0.6; cursor: not-allowed; }

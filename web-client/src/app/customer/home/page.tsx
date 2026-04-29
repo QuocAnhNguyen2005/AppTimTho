@@ -122,9 +122,10 @@ export default function CustomerHomePage() {
               {showUserMenu && (
                 <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.12)', minWidth: '180px', overflow: 'hidden', zIndex: 100 }}>
                   {[
-                    { icon: '👤', label: 'Hồ sơ cá nhân', href: '/profile' },
+                    { icon: '👤', label: 'Tài khoản của tôi', href: '/customer/account' },
                     { icon: '📋', label: 'Lịch sử đơn hàng', href: '/customer/orders' },
-                    { icon: '⚙️', label: 'Cài đặt', href: '/settings' },
+                    { icon: '💳', label: 'Thanh toán', href: '/customer/account' },
+                    { icon: '⚙️', label: 'Cài đặt', href: '/customer/account' },
                   ].map(item => (
                     <a key={item.label} href={item.href}
                       style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', color: 'var(--text-primary)', fontSize: '14px', fontWeight: '500', borderBottom: '1px solid var(--border-color)' }}

@@ -3,8 +3,8 @@ import {
   TrendingUp, ShoppingBag, Zap, UserPlus,
   AlertTriangle, XCircle, ChevronRight, RefreshCw
 } from 'lucide-react';
-import { dashboardMetrics, revenueData7Days, revenueData30Days, alerts } from '../../utils/mockData';
-import { formatVND, formatShort } from '../../utils/format';
+import { dashboardMetrics, revenueData7Days, revenueData30Days, alerts } from '../utils/mockData';
+import { formatVND, formatShort } from '../utils/format';
 import './Dashboard.css';
 
 // ─── Quick Metric Card ───────────────────────────────────────────────────────

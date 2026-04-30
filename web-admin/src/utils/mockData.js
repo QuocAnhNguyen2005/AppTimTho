@@ -330,3 +330,262 @@ export const serviceSubBreakdown = {
     { name: 'Mở khóa điện tử', count: 6, pct: 18, color: '#FBCFE8' },
   ],
 };
+
+// ─── Customer Detail (Admin Privilege View) ───────────────────────────────────
+export const customerDetailData = {
+  U001: {
+    // Tab 1: Payment transactions
+    paymentLogs: [
+      { traceId: 'ZALOPAY-20260428-001', gateway: 'ZaloPay', amount: 350000, status: 'success', orderId: 'B-0201', createdAt: '2026-04-28 08:30', settledAt: '2026-04-28 08:31', note: '' },
+      { traceId: 'VNPAY-20260415-022', gateway: 'VNPay', amount: 280000, status: 'refunded', orderId: 'B-0188', createdAt: '2026-04-15 14:10', settledAt: '2026-04-15 16:40', note: 'Khách yêu cầu hủy, đã hoàn' },
+      { traceId: 'MOMO-20260401-007', gateway: 'MoMo', amount: 500000, status: 'pending', orderId: 'B-0155', createdAt: '2026-04-01 10:05', settledAt: null, note: 'Timeout – chờ xác nhận từ cổng' },
+      { traceId: 'ZALOPAY-20260320-088', gateway: 'ZaloPay', amount: 420000, status: 'success', orderId: 'B-0102', createdAt: '2026-03-20 09:15', settledAt: '2026-03-20 09:16', note: '' },
+    ],
+    // Tab 2: Deep order log
+    orderLogs: [
+      {
+        orderId: 'B-0201', service: 'Điện lạnh', worker: 'Bùi Văn Nam', amount: 350000,
+        timeline: [
+          { event: 'Khách đặt đơn', time: '2026-04-28 08:00', gps: null },
+          { event: 'Thợ nhận đơn', time: '2026-04-28 08:05', gps: 'Q.Bình Thạnh (cách 3.2km)' },
+          { event: 'Thợ bắt đầu di chuyển', time: '2026-04-28 08:10', gps: 'Q.Bình Thạnh' },
+          { event: 'Thợ đến nơi', time: '2026-04-28 08:28', gps: 'Q.1 – Khớp địa chỉ ✓' },
+          { event: 'Bắt đầu sửa chữa', time: '2026-04-28 08:35', gps: null },
+          { event: 'Hoàn thành', time: '2026-04-28 09:45', gps: null },
+        ],
+        quotedPrice: 320000, finalPrice: 350000, priceDiff: '+30.000đ (vật tư)',
+        chat: [
+          { from: 'customer', msg: 'Máy lạnh nhà em hơi yếu gió ạ, báo giá xem nào', time: '07:55' },
+          { from: 'worker', msg: 'Dạ em xem qua thì cần bơm gas + vệ sinh, báo giá 320k ạ', time: '07:58' },
+          { from: 'customer', msg: 'Oke anh, chị chốt nha', time: '08:00' },
+          { from: 'worker', msg: 'Xong rồi chị ơi, có thêm 30k tiền ga đặc biệt chị thông cảm nha', time: '09:40' },
+          { from: 'customer', msg: 'Ừ thôi được', time: '09:42' },
+        ],
+      },
+      {
+        orderId: 'B-0188', service: 'Điện nước', worker: 'Ngô Quốc Khánh', amount: 280000,
+        timeline: [
+          { event: 'Khách đặt đơn', time: '2026-04-15 13:50', gps: null },
+          { event: 'Thợ nhận đơn', time: '2026-04-15 13:52', gps: 'Q.3 (cách 1.8km)' },
+          { event: 'Thợ bắt đầu di chuyển', time: '2026-04-15 14:00', gps: 'Q.3' },
+          { event: 'Khách hủy đơn', time: '2026-04-15 14:10', gps: null },
+        ],
+        quotedPrice: 280000, finalPrice: 0, priceDiff: 'Đã hủy – hoàn tiền',
+        chat: [
+          { from: 'customer', msg: 'Anh ơi hôm nay chị bận rồi không cần nữa', time: '14:08' },
+          { from: 'worker', msg: 'Dạ em đang trên đường rồi chị...', time: '14:09' },
+          { from: 'customer', msg: 'Xin lỗi nha anh', time: '14:10' },
+        ],
+      },
+    ],
+    // Tab 3: Voucher history
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2025-01-10', orderId: 'B-0001', ip: '113.22.45.101', device: 'iPhone 13', status: 'valid' },
+      { code: 'WEEKEND20', discount: 84000, usedAt: '2025-03-15', orderId: 'B-0045', ip: '113.22.45.101', device: 'iPhone 13', status: 'valid' },
+      { code: 'SUMMER30', discount: 105000, usedAt: '2025-06-20', orderId: 'B-0089', ip: '113.22.45.101', device: 'iPhone 13', status: 'valid' },
+    ],
+    deviceHistory: [{ ip: '113.22.45.101', device: 'iPhone 13', accounts: 1, flagged: false }],
+    accountStatus: 'active',
+    // Tab 4: Behavior metrics
+    behavior: {
+      cancelRate: 8,   // %
+      cancelCount: 2,
+      totalBooked: 24,
+      avgResponseTime: '4 phút',
+      trustScore: 92,
+      workerNotes: [
+        { worker: 'Bùi Văn Nam', note: 'Khách dễ tính, thanh toán nhanh, không đòi hỏi gì thêm.', date: '2026-04-28' },
+        { worker: 'Ngô Quốc Khánh', note: 'Khách thân thiện, cho boa 20k.', date: '2026-03-20' },
+      ],
+      complaints: 0,
+      refundCount: 1,
+    },
+  },
+
+  U002: {
+    paymentLogs: [
+      { traceId: 'MOMO-20260410-033', gateway: 'MoMo', amount: 200000, status: 'success', orderId: 'B-0170', createdAt: '2026-04-10 10:00', settledAt: '2026-04-10 10:01', note: '' },
+      { traceId: 'ZALOPAY-20260301-009', gateway: 'ZaloPay', amount: 350000, status: 'timeout', orderId: 'B-0112', createdAt: '2026-03-01 09:30', settledAt: null, note: 'Lỗi mạng – giao dịch treo 24h' },
+    ],
+    orderLogs: [
+      {
+        orderId: 'B-0170', service: 'Sửa khóa', worker: 'Võ Thị Lan', amount: 200000,
+        timeline: [
+          { event: 'Khách đặt đơn', time: '2026-04-10 09:50', gps: null },
+          { event: 'Thợ nhận đơn', time: '2026-04-10 09:53', gps: 'Q.Tân Bình (cách 2km)' },
+          { event: 'Thợ đến nơi', time: '2026-04-10 10:18', gps: 'Q.Tân Bình – Khớp ✓' },
+          { event: 'Hoàn thành', time: '2026-04-10 10:50', gps: null },
+        ],
+        quotedPrice: 150000, finalPrice: 200000, priceDiff: '+50.000đ (thợ tự thêm)',
+        chat: [
+          { from: 'customer', msg: 'Sửa khóa cửa thường mất bao nhiêu vậy?', time: '09:48' },
+          { from: 'worker', msg: 'Dạ 150k anh ạ', time: '09:49' },
+          { from: 'customer', msg: 'Ok chốt', time: '09:50' },
+          { from: 'worker', msg: 'Xong rồi anh, khóa này loại khó nên 200k anh nhé', time: '10:48' },
+          { from: 'customer', msg: 'Sao lại tăng vậy? Báo giá 150k mà', time: '10:49' },
+          { from: 'worker', msg: 'Anh thông cảm, vật tư đặc biệt ạ', time: '10:50' },
+        ],
+      },
+    ],
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2025-06-20', orderId: 'B-0050', ip: '171.225.10.55', device: 'Samsung S22', status: 'valid' },
+    ],
+    deviceHistory: [{ ip: '171.225.10.55', device: 'Samsung S22', accounts: 3, flagged: true, note: '3 TK cùng IP' }],
+    accountStatus: 'active',
+    behavior: {
+      cancelRate: 37, cancelCount: 3, totalBooked: 8,
+      avgResponseTime: '12 phút', trustScore: 55,
+      workerNotes: [
+        { worker: 'Võ Thị Lan', note: 'Khách hay cò kè, đòi giảm giá thêm sau khi thợ đã đến nơi.', date: '2026-04-10' },
+      ],
+      complaints: 1, refundCount: 0,
+    },
+  },
+
+  U003: {
+    paymentLogs: [
+      { traceId: 'VNPAY-20260428-105', gateway: 'VNPay', amount: 350000, status: 'pending', orderId: 'B-0200', createdAt: '2026-04-28 14:30', settledAt: null, note: 'App báo lỗi, tiền đã trừ nhưng đơn chưa tạo' },
+    ],
+    orderLogs: [],
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2026-01-05', orderId: 'B-0010', ip: '14.225.12.99', device: 'Oppo A96', status: 'valid' },
+      { code: 'FRIEND20', discount: 50000, usedAt: '2026-02-10', orderId: 'B-0025', ip: '14.225.12.99', device: 'Oppo A96', status: 'suspicious', note: 'Mã của tài khoản ảo U004' },
+    ],
+    deviceHistory: [{ ip: '14.225.12.99', device: 'Oppo A96', accounts: 1, flagged: false }],
+    accountStatus: 'active',
+    behavior: {
+      cancelRate: 33, cancelCount: 1, totalBooked: 3,
+      avgResponseTime: '8 phút', trustScore: 60,
+      workerNotes: [],
+      complaints: 1, refundCount: 1,
+    },
+  },
+
+  U004: {
+    paymentLogs: [
+      { traceId: 'ZALOPAY-20260425-200', gateway: 'ZaloPay', amount: 500000, status: 'success', orderId: 'B-0195', createdAt: '2026-04-25 09:00', settledAt: '2026-04-25 09:01', note: '' },
+      { traceId: 'MOMO-20260410-111', gateway: 'MoMo', amount: 400000, status: 'success', orderId: 'B-0178', createdAt: '2026-04-10 11:30', settledAt: '2026-04-10 11:31', note: '' },
+      { traceId: 'VNPAY-20260320-044', gateway: 'VNPay', amount: 600000, status: 'refunded', orderId: 'B-0145', createdAt: '2026-03-20 16:00', settledAt: '2026-03-21 10:00', note: 'Hoàn do thợ hủy' },
+    ],
+    orderLogs: [
+      {
+        orderId: 'B-0195', service: 'Vệ sinh nhà cửa', worker: 'Đặng Thị Hoa', amount: 500000,
+        timeline: [
+          { event: 'Khách đặt đơn', time: '2026-04-25 08:45', gps: null },
+          { event: 'Thợ nhận đơn', time: '2026-04-25 08:47', gps: 'Q.Gò Vấp (cách 5km)' },
+          { event: 'Thợ đến nơi', time: '2026-04-25 09:30', gps: 'Q.Bình Thạnh – Khớp ✓' },
+          { event: 'Hoàn thành', time: '2026-04-25 12:00', gps: null },
+        ],
+        quotedPrice: 500000, finalPrice: 500000, priceDiff: 'Đúng báo giá',
+        chat: [
+          { from: 'customer', msg: 'Căn hộ 2PN, cần dọn dẹp toàn bộ ạ', time: '08:43' },
+          { from: 'worker', msg: 'Dạ 500k anh ạ, em làm kỹ cho anh', time: '08:45' },
+          { from: 'customer', msg: 'Ok nha', time: '08:46' },
+        ],
+      },
+    ],
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2024-11-15', orderId: 'B-0001', ip: '42.116.88.200', device: 'iPhone 14 Pro', status: 'valid' },
+      { code: 'LOYAL100', discount: 100000, usedAt: '2025-06-01', orderId: 'B-0120', ip: '42.116.88.200', device: 'iPhone 14 Pro', status: 'valid' },
+      { code: 'SUMMER30', discount: 150000, usedAt: '2025-07-15', orderId: 'B-0155', ip: '42.116.88.200', device: 'iPhone 14 Pro', status: 'valid' },
+    ],
+    deviceHistory: [{ ip: '42.116.88.200', device: 'iPhone 14 Pro', accounts: 1, flagged: false }],
+    accountStatus: 'active',
+    behavior: {
+      cancelRate: 5, cancelCount: 2, totalBooked: 41,
+      avgResponseTime: '3 phút', trustScore: 95,
+      workerNotes: [
+        { worker: 'Đặng Thị Hoa', note: 'Khách rất tử tế, nhà sạch sẽ, cho thợ nước và đồ ăn vặt.', date: '2026-04-25' },
+        { worker: 'Ngô Quốc Khánh', note: 'Khách VIP, thanh toán đúng giá, review 5 sao luôn.', date: '2026-03-10' },
+      ],
+      complaints: 0, refundCount: 1,
+    },
+  },
+
+  U005: {
+    paymentLogs: [
+      { traceId: 'MOMO-20260422-077', gateway: 'MoMo', amount: 180000, status: 'success', orderId: 'B-0192', createdAt: '2026-04-22 15:00', settledAt: '2026-04-22 15:01', note: '' },
+    ],
+    orderLogs: [],
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2025-03-22', orderId: 'B-0030', ip: '27.64.100.88', device: 'Xiaomi 13', status: 'valid' },
+    ],
+    deviceHistory: [{ ip: '27.64.100.88', device: 'Xiaomi 13', accounts: 1, flagged: false }],
+    accountStatus: 'active',
+    behavior: {
+      cancelRate: 25, cancelCount: 3, totalBooked: 12,
+      avgResponseTime: '9 phút', trustScore: 68,
+      workerNotes: [
+        { worker: 'Phan Minh Trí', note: 'Khách hủy đơn lúc thợ đang đi đường, không báo trước.', date: '2026-04-01' },
+      ],
+      complaints: 0, refundCount: 0,
+    },
+  },
+
+  U006: {
+    paymentLogs: [
+      { traceId: 'VNPAY-20260428-301', gateway: 'VNPay', amount: 350000, status: 'timeout', orderId: 'B-0199', createdAt: '2026-04-28 14:30', settledAt: null, note: 'App bị văng, tiền đã bị trừ nhưng đơn chưa tạo' },
+    ],
+    orderLogs: [],
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2026-04-01', orderId: 'B-0005', ip: '171.225.10.55', device: 'Xiaomi 12', status: 'suspicious', note: 'IP trùng 5 tài khoản khác' },
+    ],
+    deviceHistory: [{ ip: '171.225.10.55', device: 'Xiaomi 12', accounts: 5, flagged: true, note: '5 TK dùng cùng IP + thiết bị – nghi gian lận mã giảm giá' }],
+    accountStatus: 'suspended',
+    behavior: {
+      cancelRate: 0, cancelCount: 0, totalBooked: 1,
+      avgResponseTime: '—', trustScore: 20,
+      workerNotes: [],
+      complaints: 0, refundCount: 0,
+    },
+  },
+
+  U007: {
+    paymentLogs: [
+      { traceId: 'ZALOPAY-20260420-088', gateway: 'ZaloPay', amount: 400000, status: 'success', orderId: 'B-0185', createdAt: '2026-04-20 10:00', settledAt: '2026-04-20 10:01', note: '' },
+      { traceId: 'MOMO-20260310-055', gateway: 'MoMo', amount: 280000, status: 'refunded', orderId: 'B-0150', createdAt: '2026-03-10 08:00', settledAt: '2026-03-10 17:00', note: 'Hoàn tiền theo yêu cầu khiếu nại' },
+    ],
+    orderLogs: [],
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2025-05-14', orderId: 'B-0040', ip: '103.15.52.180', device: 'Samsung A54', status: 'valid' },
+      { code: 'LOYAL100', discount: 100000, usedAt: '2025-12-01', orderId: 'B-0120', ip: '103.15.52.180', device: 'Samsung A54', status: 'valid' },
+    ],
+    deviceHistory: [{ ip: '103.15.52.180', device: 'Samsung A54', accounts: 1, flagged: false }],
+    accountStatus: 'active',
+    behavior: {
+      cancelRate: 21, cancelCount: 4, totalBooked: 19,
+      avgResponseTime: '6 phút', trustScore: 72,
+      workerNotes: [
+        { worker: 'Trịnh Thị Thu', note: 'Khách hay đổi yêu cầu giữa chừng, mất thêm thời gian nhưng trả tiền đúng.', date: '2026-04-20' },
+      ],
+      complaints: 1, refundCount: 1,
+    },
+  },
+
+  U008: {
+    paymentLogs: [
+      { traceId: 'ZALOPAY-20260429-500', gateway: 'ZaloPay', amount: 600000, status: 'success', orderId: 'B-0210', createdAt: '2026-04-29 09:00', settledAt: '2026-04-29 09:01', note: '' },
+      { traceId: 'VNPAY-20260415-200', gateway: 'VNPay', amount: 500000, status: 'success', orderId: 'B-0195', createdAt: '2026-04-15 14:00', settledAt: '2026-04-15 14:01', note: '' },
+      { traceId: 'MOMO-20260401-300', gateway: 'MoMo', amount: 350000, status: 'success', orderId: 'B-0180', createdAt: '2026-04-01 11:00', settledAt: '2026-04-01 11:01', note: '' },
+    ],
+    orderLogs: [],
+    voucherLogs: [
+      { code: 'NEWUSER50', discount: 50000, usedAt: '2024-09-08', orderId: 'B-0001', ip: '14.161.22.55', device: 'iPhone 15 Pro Max', status: 'valid' },
+      { code: 'LOYAL100', discount: 100000, usedAt: '2025-01-10', orderId: 'B-0055', ip: '14.161.22.55', device: 'iPhone 15 Pro Max', status: 'valid' },
+      { code: 'GOLD200', discount: 200000, usedAt: '2025-09-20', orderId: 'B-0180', ip: '14.161.22.55', device: 'iPhone 15 Pro Max', status: 'valid' },
+    ],
+    deviceHistory: [{ ip: '14.161.22.55', device: 'iPhone 15 Pro Max', accounts: 1, flagged: false }],
+    accountStatus: 'active',
+    behavior: {
+      cancelRate: 2, cancelCount: 1, totalBooked: 55,
+      avgResponseTime: '2 phút', trustScore: 98,
+      workerNotes: [
+        { worker: 'Bùi Văn Nam', note: 'Khách VIP số 1 của hệ thống, luôn review 5 sao, boa hậu hĩnh.', date: '2026-04-29' },
+        { worker: 'Đặng Thị Hoa', note: 'Chị Nga là khách quen, đặt thợ mỗi tháng, rất thoải mái.', date: '2026-04-10' },
+        { worker: 'Ngô Quốc Khánh', note: 'Khách tốt bụng, cho nước và bánh khi làm việc.', date: '2026-03-15' },
+      ],
+      complaints: 0, refundCount: 0,
+    },
+  },
+};
+

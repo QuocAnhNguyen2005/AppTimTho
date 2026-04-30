@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import {
   Search, MessageSquare, ChevronRight, XCircle,
-  RotateCcw, CheckCircle, AlertTriangle, Crown
+  RotateCcw, CheckCircle, AlertTriangle, Crown, ExternalLink
 } from 'lucide-react';
 import { customerList, tickets, tierRules } from '../../utils/mockData';
 import { formatVND, formatDate, getTierConfig } from '../../utils/format';
+import CustomerDetailPanel from './CustomerDetailPanel';
 import './Users.css';
+import './CustomerDetailPanel.css';
 
 // ─── Tier Badge ──────────────────────────────────────────────────────────────
 const TierBadge = ({ tier }) => {
@@ -135,6 +137,7 @@ const Users = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [toast, setToast] = useState(null);
   const [currentRules, setCurrentRules] = useState(tierRules);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -223,7 +226,7 @@ const Users = () => {
             </thead>
             <tbody>
               {filteredUsers.map((u) => (
-                <tr key={u.id}>
+                <tr key={u.id} className="cdp-table-row-click" onClick={() => setSelectedCustomer(u)}>
                   <td>
                     <div className="worker-cell">
                       <img
@@ -232,7 +235,10 @@ const Users = () => {
                         className="table-avatar"
                       />
                       <div>
-                        <p className="worker-name">{u.name}</p>
+                        <div className="cdp-row-name-link">
+                          <p className="worker-name">{u.name}</p>
+                          <span className="cdp-view-hint"><ExternalLink size={11} /> Chi tiết</span>
+                        </div>
                         <p className="worker-id">{u.id}</p>
                       </div>
                     </div>
@@ -297,6 +303,13 @@ const Users = () => {
           onClose={() => setSelectedTicket(null)}
           onRefund={handleRefund}
           onDismiss={handleDismiss}
+        />
+      )}
+
+      {selectedCustomer && (
+        <CustomerDetailPanel
+          customer={selectedCustomer}
+          onClose={() => setSelectedCustomer(null)}
         />
       )}
     </div>

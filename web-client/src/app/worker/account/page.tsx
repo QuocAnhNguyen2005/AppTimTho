@@ -112,28 +112,32 @@ export default function WorkerAccountPage() {
               </div>
             </div>
 
-            {/* Verified Docs */}
+            {/* Verified Docs (eKYC) */}
             <div style={{ backgroundColor:'white', borderRadius:'20px', border:'1px solid #E5E7EB', marginBottom:'20px', overflow:'hidden' }}>
-              <div style={{ padding:'20px 24px', borderBottom:'1px solid #F3F4F6', fontWeight:'800', fontSize:'16px', color:'#111827' }}>🔒 Hồ sơ Chứng thực (Admin kiểm duyệt)</div>
+              <div style={{ padding:'20px 24px', borderBottom:'1px solid #F3F4F6', fontWeight:'800', fontSize:'16px', color:'#111827', display: 'flex', justifyContent: 'space-between' }}>
+                <span>🔒 Xác thực danh tính (eKYC)</span>
+                <span style={{ fontSize: '12px', color: '#10B981', backgroundColor: '#D1FAE5', padding: '4px 10px', borderRadius: '12px' }}>Đã phê duyệt</span>
+              </div>
               <div style={{ padding:'24px' }}>
                 <div style={{ backgroundColor:'#FEF3C7', borderRadius:'12px', padding:'14px 18px', marginBottom:'20px', border:'1px solid #FDE68A', fontSize:'13px', color:'#92400E', fontWeight:'600' }}>
-                  ⚠️ Tài liệu cần rõ nét, không mờ. Admin sẽ xét duyệt trong 1-3 ngày làm việc.
+                  ⚠️ Tài liệu cần rõ nét, không bị lóa. Admin sử dụng căn cứ này để xét duyệt cho phép bạn nhận đơn trên ứng dụng.
                 </div>
-                {[
-                  { label:'📷 CCCD mặt trước', status:'verified' },
-                  { label:'📷 CCCD mặt sau', status:'verified' },
-                  { label:'📋 Giấy xác nhận hạnh kiểm', status:'pending' },
-                ].map(doc => (
-                  <div key={doc.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 0', borderBottom:'1px solid #F3F4F6' }}>
-                    <div>
-                      <div style={{ fontWeight:'600', fontSize:'14px', color:'#111827' }}>{doc.label}</div>
-                      <div style={{ fontSize:'12px', marginTop:'3px', color: doc.status==='verified' ? '#059669':'#D97706', fontWeight:'700' }}>
-                        {doc.status==='verified' ? '✓ Đã xác minh':'⏳ Đang chờ duyệt'}
-                      </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  {[
+                    { label:'Mặt trước CCCD', img: 'https://placehold.co/300x190?text=CCCD+Mat+Truoc' },
+                    { label:'Mặt sau CCCD', img: 'https://placehold.co/300x190?text=CCCD+Mat+Sau' },
+                    { label:'Ảnh chân dung (Selfie)', img: 'https://placehold.co/300x300?text=Selfie' },
+                  ].map(doc => (
+                    <div key={doc.label} style={{ display:'flex', flexDirection:'column', gap: '8px', padding:'16px', border: '1px solid #E5E7EB', borderRadius: '16px', backgroundColor: '#F9FAFB' }}>
+                      <div style={{ fontWeight:'700', fontSize:'14px', color:'#111827', textAlign: 'center' }}>{doc.label}</div>
+                      <img src={doc.img} alt={doc.label} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '12px', border: '1px solid #D1D5DB' }} />
+                      <button style={{ marginTop: '8px', padding:'8px', width: '100%', backgroundColor:'white', border:'1px solid #D1D5DB', borderRadius:'8px', fontWeight:'600', fontSize:'13px', cursor:'pointer', color:'#374151' }}>
+                        Tải ảnh khác
+                      </button>
                     </div>
-                    <button style={{ padding:'8px 16px', backgroundColor:'#F3F4F6', border:'none', borderRadius:'8px', fontWeight:'600', fontSize:'13px', cursor:'pointer', color:'#374151' }}>Tải lên lại</button>
-                  </div>
-                ))}
+                  ))}
+                </div>
 
                 <div style={{ marginTop:'20px' }}>
                   <div style={{ fontWeight:'700', fontSize:'15px', color:'#111827', marginBottom:'12px' }}>📜 Bằng cấp / Chứng chỉ nghề</div>

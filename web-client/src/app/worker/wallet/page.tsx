@@ -35,16 +35,21 @@ export default function WorkerWalletPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Mock chart data for 7 days
+  // Mock chart data for weeks
   const mockChartData = [
-    { day: 'T2', value: 150000, height: '30%' },
-    { day: 'T3', value: 300000, height: '60%' },
-    { day: 'T4', value: 50000,  height: '10%' },
-    { day: 'T5', value: 450000, height: '90%' },
-    { day: 'T6', value: 200000, height: '40%' },
-    { day: 'T7', value: 600000, height: '100%' },
-    { day: 'CN', value: 400000, height: '80%' },
+    { week: 'Tuần 1', value: 1500000, y: 80 },
+    { week: 'Tuần 2', value: 3000000, y: 40 },
+    { week: 'Tuần 3', value: 2500000, y: 50 },
+    { week: 'Tuần 4', value: 4500000, y: 10 },
   ];
+
+  const [filterWeek, setFilterWeek] = useState<string | null>(null);
+
+  const handleChartClick = (week: string) => {
+    setFilterWeek(week === filterWeek ? null : week);
+    // Scroll to transactions
+    document.getElementById('tx-history')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('user');
@@ -136,31 +141,64 @@ export default function WorkerWalletPage() {
           <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', gap: '16px' }}>
               <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '20px', padding: '20px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '4px' }}>Tổng thu nhập tháng này</div>
-                <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{formatVND(stats.this_month_earned ?? 0)}</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '4px' }}>Ví tín dụng (Trừ phí 15.5%)</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: '#DC2626' }}>{formatVND(500000)}</div>
+                <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px', cursor: 'pointer' }}>+ Nạp thêm tiền ảo</div>
               </div>
               <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '20px', padding: '20px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '4px' }}>Tổng đã nộp nền tảng</div>
-                <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{formatVND(stats.total_commission ?? 0)}</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '4px' }}>Tiền mặt thực nhận</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: '#10B981' }}>{formatVND(stats.this_month_earned ?? 0)}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Khách trả trực tiếp</div>
               </div>
             </div>
 
-            {/* CSS Chart */}
+            {/* SVG Line Chart */}
             <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '20px', border: '1px solid var(--border-color)', flex: 1 }}>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>Thu nhập 7 ngày qua</div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: '120px', width: '100%', paddingBottom: '20px', borderBottom: '1px dashed #E5E7EB', position: 'relative' }}>
-                {mockChartData.map((d, i) => (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', position: 'relative' }} className="chart-bar-group">
-                    {/* Tooltip (pseudo) */}
-                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#6B7280', marginBottom: '4px' }}>{(d.value/1000).toFixed(0)}k</div>
-                    
-                    {/* Bar */}
-                    <div style={{ width: '100%', maxWidth: '30px', height: d.height, backgroundColor: i === 5 ? '#4F46E5' : '#C7D2FE', borderRadius: '4px 4px 0 0', transition: 'height 0.5s' }} />
-                    
-                    {/* Label */}
-                    <div style={{ position: 'absolute', bottom: '-24px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>{d.day}</div>
-                  </div>
-                ))}
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '16px' }}>Biến động thu nhập tháng này</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', height: '140px', width: '100%', position: 'relative' }}>
+                <svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0 }}>
+                  <polyline 
+                    points="0,140 16,112 50,56 83,70 116,14" 
+                    fill="none" stroke="#4F46E5" strokeWidth="3" 
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinecap="round" strokeLinejoin="round"
+                  />
+                  {/* Fill area */}
+                  <polygon 
+                    points="0,140 16,112 50,56 83,70 116,14 116,140" 
+                    fill="url(#grad)" opacity="0.2" vectorEffect="non-scaling-stroke"
+                  />
+                  <defs>
+                    <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#4F46E5" />
+                      <stop offset="100%" stopColor="transparent" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                <div style={{ display: 'flex', width: '100%', height: '100%', position: 'relative', zIndex: 1, justifyContent: 'space-between' }}>
+                  <div style={{ width: '0' }}></div>
+                  {mockChartData.map((d, i) => (
+                    <div key={i} 
+                      onClick={() => handleChartClick(d.week)}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', position: 'relative', cursor: 'pointer' }}>
+                      
+                      {/* Chart Point */}
+                      <div style={{ position: 'absolute', top: `${d.y}%`, width: '12px', height: '12px', backgroundColor: filterWeek === d.week ? '#10B981' : '#4F46E5', borderRadius: '50%', border: '2px solid white', transform: 'translateY(-50%)', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', zIndex: 2 }} />
+                      
+                      {/* Tooltip */}
+                      <div style={{ position: 'absolute', top: `calc(${d.y}% - 25px)`, fontSize: '11px', fontWeight: '700', color: filterWeek === d.week ? '#10B981' : '#6B7280', whiteSpace: 'nowrap', backgroundColor: 'white', padding: '2px 6px', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                        {(d.value/1000000).toFixed(1)}M
+                      </div>
+                      
+                      {/* Label */}
+                      <div style={{ position: 'absolute', bottom: '0', fontSize: '12px', fontWeight: filterWeek === d.week ? '800' : '600', color: filterWeek === d.week ? '#10B981' : 'var(--text-secondary)' }}>
+                        {d.week}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ width: '0' }}></div>
+                </div>
               </div>
             </div>
           </div>
@@ -169,9 +207,14 @@ export default function WorkerWalletPage() {
 
       {/* Transactions */}
       {!loading && (
-        <div style={{ backgroundColor: 'white', borderRadius: '20px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', backgroundColor: '#F9FAFB' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>Lịch sử dòng tiền</h2>
+        <div id="tx-history" style={{ backgroundColor: 'white', borderRadius: '20px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>
+              Lịch sử dòng tiền {filterWeek && <span style={{ color: '#10B981' }}>- Lọc theo {filterWeek}</span>}
+            </h2>
+            {filterWeek && (
+              <button onClick={() => setFilterWeek(null)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px', fontWeight: '600', textDecoration: 'underline' }}>Bỏ lọc</button>
+            )}
           </div>
           {transactions.length === 0 ? (
             <div style={{ padding: '60px', textAlign: 'center' }}>

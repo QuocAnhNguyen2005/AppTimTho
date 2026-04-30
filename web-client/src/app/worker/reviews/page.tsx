@@ -135,20 +135,22 @@ export default function WorkerReviewsPage() {
               <div style={{ width: '1px', height: '120px', backgroundColor: 'var(--border-color)', display: 'none', '@media (min-width: 768px)': { display: 'block' } } as any} />
 
               {stats.rating_distribution && (
-                <div style={{ flex: 1, minWidth: '250px' }}>
-                  {[5, 4, 3, 2, 1].map(star => {
-                    const count = stats.rating_distribution[star] ?? 0;
-                    const pct = stats.total_reviews > 0 ? (count / stats.total_reviews) * 100 : 0;
+                <div style={{ flex: 1, minWidth: '250px', borderLeft: '1px solid var(--border-color)', paddingLeft: '48px' }}>
+                  <div style={{ marginBottom: '16px', fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Chi tiết đánh giá</div>
+                  {[
+                    { label: 'Thái độ phục vụ', score: 4.9, pct: 98 },
+                    { label: 'Trình độ tay nghề', score: 4.8, pct: 96 },
+                    { label: 'Đúng giờ', score: 4.5, pct: 90 },
+                  ].map(criterion => {
                     return (
-                      <div key={star} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '32px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{star}</span>
-                          <span style={{ color: '#F59E0B', fontSize: '14px' }}>★</span>
+                      <div key={criterion.label} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+                        <div style={{ width: '130px', fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                          {criterion.label}
                         </div>
-                        <div style={{ flex: 1, height: '10px', backgroundColor: '#F1F5F9', borderRadius: '5px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${pct}%`, backgroundColor: '#F59E0B', borderRadius: '5px', transition: 'width 0.5s ease' }} />
+                        <div style={{ flex: 1, height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${criterion.pct}%`, backgroundColor: '#10B981', borderRadius: '4px', transition: 'width 0.5s ease' }} />
                         </div>
-                        <span style={{ fontSize: '13px', color: 'var(--text-secondary)', width: '30px', textAlign: 'right', fontWeight: '600' }}>{count}</span>
+                        <span style={{ fontSize: '13px', color: 'var(--text-primary)', width: '30px', textAlign: 'right', fontWeight: '700' }}>{criterion.score}</span>
                       </div>
                     );
                   })}
@@ -278,6 +280,39 @@ export default function WorkerReviewsPage() {
               <button style={{ padding: '14px', width: '100%', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(79, 70, 229, 0.2)' }}>
                 Lưu chuyên môn
               </button>
+            </div>
+          </div>
+
+          {/* Certificates Form */}
+          <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '32px', border: '1px solid var(--border-color)', gridColumn: '1 / -1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>Chứng chỉ chuyên môn (Hồ sơ năng lực)</h2>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Khách hàng sẽ nhìn thấy các bằng cấp này để tăng độ tin tưởng khi thuê bạn.</p>
+              </div>
+              <button style={{ padding: '8px 16px', backgroundColor: '#EEF2FF', color: '#4338CA', border: '1px solid #C7D2FE', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                + Tải lên chứng chỉ
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+              {/* Cert 1 */}
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <img src="https://placehold.co/100x70?text=CCNA" alt="CCNA" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E5E7EB' }} />
+                <div>
+                  <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>Chứng chỉ Mạng CCNA</div>
+                  <div style={{ fontSize: '12px', color: '#10B981', fontWeight: '600' }}>✓ Đã xác thực</div>
+                </div>
+              </div>
+
+              {/* Cert 2 */}
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <img src="https://placehold.co/100x70?text=DienLanh" alt="Điện lạnh" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E5E7EB' }} />
+                <div>
+                  <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>Bằng Nghề Điện Lạnh</div>
+                  <div style={{ fontSize: '12px', color: '#10B981', fontWeight: '600' }}>✓ Đã xác thực</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

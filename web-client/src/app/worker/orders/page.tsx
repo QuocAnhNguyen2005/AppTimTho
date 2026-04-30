@@ -47,27 +47,60 @@ export default function WorkerOrdersPage() {
     } catch { router.push('/login'); }
   }, [router]);
 
-  const fetchOrders = async (workerId: number) => {
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const fetchOrders = async (workerId: number, pageNum: number = 1, isLoadMore = false) => {
     try {
-      setLoading(true);
+      if (!isLoadMore) setLoading(true);
       setError('');
+      // Simulate API pagination: In a real app we pass ?page=${pageNum}&limit=10
       const res = await fetch(`http://localhost:5000/api/jobs/worker/${workerId}`);
       if (!res.ok) throw new Error('Không thể tải lịch sử đơn hàng');
       const data = await res.json();
       
-      // Inject some mock data for demonstration purposes
-      const mockOrders = (data.jobs || []).map((j: Job) => ({
+      const allOrders = data.jobs || [];
+      // Simulate pagination logic
+      const limit = 10;
+      const startIndex = (pageNum - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedOrders = allOrders.slice(startIndex, endIndex);
+
+      const mockOrders = paginatedOrders.map((j: Job) => ({
         ...j,
         cancel_reason: j.status === 'CANCELLED' ? 'Khách đổi ý không muốn sửa nữa' : undefined,
-        images: ['https://placehold.co/100x100?text=Loi1', 'https://placehold.co/100x100?text=Loi2']
+        images: ['https://placehold.co/100x100?text=Truoc_khi_sua', 'https://placehold.co/100x100?text=Sau_khi_sua']
       }));
-      setOrders(mockOrders);
+
+      if (isLoadMore) {
+        setOrders(prev => [...prev, ...mockOrders]);
+      } else {
+        setOrders(mockOrders);
+      }
+
+      setHasMore(endIndex < allOrders.length);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Lỗi không xác định');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+        if (!loading && hasMore && worker) {
+          setPage(p => {
+            const next = p + 1;
+            fetchOrders(worker.id, next, true);
+            return next;
+          });
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loading, hasMore, worker]);
 
   if (!worker) return null;
 
@@ -110,46 +143,39 @@ export default function WorkerOrdersPage() {
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Chưa có đơn nào trong mục này</p>
           </div>
         ) : (
-          <div style={{ backgroundColor: 'white', borderRadius: '20px', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '1px solid var(--border-color)' }}>
-                  <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Mã Đơn</th>
-                  <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Dịch vụ / Khách hàng</th>
-                  <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Thời gian</th>
-                  <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Trạng thái</th>
-                  <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Tổng tiền</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayOrders.map(order => {
-                  const s = STATUS_MAP[order.status] ?? { bg: '#F3F4F6', color: '#4B5563', label: order.status };
-                  return (
-                    <tr key={order.id} 
-                      onClick={() => setSelectedOrder(order)}
-                      style={{ borderBottom: '1px solid var(--border-color)', cursor: 'pointer', transition: 'background-color 0.2s', ':hover': { backgroundColor: '#F9FAFB' } } as any}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <td style={{ padding: '16px 24px', fontWeight: '700', color: '#4338CA' }}>#DH-{order.id.toString().padStart(5, '0')}</td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>{order.description.substring(0, 30)}{order.description.length > 30 ? '...' : ''}</div>
-                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>👤 {order.status === 'CANCELLED' ? order.customer_name[0] + '***' : order.customer_name}</div>
-                      </td>
-                      <td style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        {new Date(order.scheduled_time).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <span style={{ backgroundColor: s.bg, color: s.color, padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', display: 'inline-block' }}>{s.label}</span>
-                      </td>
-                      <td style={{ padding: '16px 24px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                        {formatPrice(order.price)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+            {displayOrders.map(order => {
+              const s = STATUS_MAP[order.status] ?? { bg: '#F3F4F6', color: '#4B5563', label: order.status };
+              return (
+                <div key={order.id} 
+                  onClick={() => setSelectedOrder(order)}
+                  style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '20px', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', position: 'relative' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <span style={{ backgroundColor: s.bg, color: s.color, padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '800' }}>{s.label}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>{new Date(order.scheduled_time).toLocaleDateString('vi-VN')}</span>
+                  </div>
+                  
+                  <div style={{ fontWeight: '800', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '8px', lineHeight: 1.4 }}>
+                    {order.description}
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>👤 Khách hàng: <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{order.status === 'CANCELLED' ? order.customer_name[0] + '***' : order.customer_name}</span></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📍 Quãng đường: <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>~2.5 km</span></div>
+                  </div>
+                  
+                  <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>#DH-{order.id.toString().padStart(5, '0')}</span>
+                    <span style={{ fontWeight: '800', fontSize: '16px', color: 'var(--accent-primary)' }}>{formatPrice(order.price)}</span>
+                  </div>
+                </div>
+              );
+            })}
+            {loading && <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '20px', color: 'var(--text-secondary)' }}>Đang tải thêm...</div>}
+            {!hasMore && displayOrders.length > 0 && <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '20px', color: 'var(--text-secondary)' }}>Hết danh sách</div>}
           </div>
         )
       )}
@@ -199,12 +225,53 @@ export default function WorkerOrdersPage() {
                 </p>
               </div>
 
+              {/* Timeline / Gantt Chart */}
+              <div style={{ backgroundColor: '#F9FAFB', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: 'var(--text-primary)' }}>Tiến trình thực thi (Gantt/Timeline)</h3>
+                <div style={{ position: 'relative', borderLeft: '2px solid #E5E7EB', marginLeft: '12px', paddingBottom: '10px' }}>
+                  
+                  {/* Step 1 */}
+                  <div style={{ position: 'relative', paddingLeft: '24px', marginBottom: '24px' }}>
+                    <div style={{ position: 'absolute', left: '-7px', top: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#10B981', border: '2px solid white' }} />
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>14:00</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Khách đặt lịch</div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div style={{ position: 'relative', paddingLeft: '24px', marginBottom: '24px' }}>
+                    <div style={{ position: 'absolute', left: '-7px', top: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#10B981', border: '2px solid white' }} />
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>14:05</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Thợ nhận đơn</div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div style={{ position: 'relative', paddingLeft: '24px', marginBottom: '24px' }}>
+                    <div style={{ position: 'absolute', left: '-7px', top: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: ['COMPLETED', 'CANCELLED'].includes(selectedOrder.status) ? '#10B981' : '#D1D5DB', border: '2px solid white' }} />
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>14:30</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Check-in tại nhà khách</div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div style={{ position: 'relative', paddingLeft: '24px' }}>
+                    <div style={{ position: 'absolute', left: '-7px', top: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: selectedOrder.status === 'COMPLETED' ? '#10B981' : '#D1D5DB', border: '2px solid white' }} />
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>15:45</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Hoàn thành công việc</div>
+                  </div>
+                  
+                </div>
+              </div>
+
               {selectedOrder.images && selectedOrder.images.length > 0 && (
                 <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-primary)' }}>Hình ảnh đính kèm (Khách chụp)</h3>
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-primary)' }}>Hình ảnh bằng chứng (Trước và Sau)</h3>
+                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                     {selectedOrder.images.map((img, idx) => (
-                      <img key={idx} src={img} alt={`Hình lỗi ${idx+1}`} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '12px', border: '1px solid var(--border-color)' }} />
+                      <div key={idx} style={{ flex: 1, minWidth: '120px', maxWidth: '200px' }}>
+                        <img src={img} alt={`Bằng chứng ${idx+1}`} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }} />
+                        <div style={{ textAlign: 'center', fontSize: '12px', fontWeight: '600', marginTop: '8px', color: 'var(--text-secondary)' }}>
+                          {idx === 0 ? 'Trước khi sửa' : 'Sau khi sửa'}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

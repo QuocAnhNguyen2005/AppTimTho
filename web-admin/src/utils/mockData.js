@@ -212,3 +212,121 @@ export const financeExportData = [
   { date: '2026-04-01', orderId: 'B-0002', customer: 'Trần Văn Bình', worker: 'Ngô Quốc Khánh', service: 'Điện nước', amount: 280000, commission: 43400, net: 236600, status: 'completed' },
   { date: '2026-04-02', orderId: 'B-0003', customer: 'Phạm Quốc Toàn', worker: 'Đặng Thị Hoa', service: 'Vệ sinh nhà cửa', amount: 500000, commission: 77500, net: 422500, status: 'completed' },
 ];
+
+// ─── Dashboard Interactive Mock Data ─────────────────────────────────────────
+
+// 1. Revenue Today – payment method breakdown + today's transactions
+export const todayTransactions = [
+  { id: 'B-0201', worker: 'Bùi Văn Nam', customer: 'Nguyễn Thị Hương', service: 'Điện lạnh', amount: 350000, commission: 54250, payMethod: 'Chuyển khoản App', time: '08:30' },
+  { id: 'B-0202', worker: 'Ngô Quốc Khánh', customer: 'Trần Văn Bình', service: 'Điện nước', amount: 280000, commission: 43400, payMethod: 'ZaloPay', time: '09:15' },
+  { id: 'B-0203', worker: 'Đặng Thị Hoa', customer: 'Phạm Quốc Toàn', service: 'Vệ sinh nhà cửa', amount: 500000, commission: 77500, payMethod: 'Tiền mặt', time: '10:00' },
+  { id: 'B-0204', worker: 'Phan Minh Trí', customer: 'Hoàng Minh Châu', service: 'Điện nước', amount: 180000, commission: 27900, payMethod: 'MoMo', time: '10:45' },
+  { id: 'B-0205', worker: 'Đinh Văn Bảo', customer: 'Vũ Thị Diễm', service: 'Sửa khóa', amount: 200000, commission: 31000, payMethod: 'Tiền mặt', time: '11:20' },
+  { id: 'B-0206', worker: 'Trịnh Thị Thu', customer: 'Đỗ Văn Hậu', service: 'Vệ sinh nhà cửa', amount: 400000, commission: 62000, payMethod: 'Chuyển khoản App', time: '13:05' },
+  { id: 'B-0207', worker: 'Bùi Văn Nam', customer: 'Bùi Thị Nga', service: 'Điện lạnh', amount: 500000, commission: 77500, payMethod: 'ZaloPay', time: '14:30' },
+  { id: 'B-0208', worker: 'Ngô Quốc Khánh', customer: 'Nguyễn Thị Hương', service: 'Điện nước', amount: 320000, commission: 49600, payMethod: 'MoMo', time: '15:10' },
+  { id: 'B-0209', worker: 'Phan Minh Trí', customer: 'Trần Văn Bình', service: 'Điện nước', amount: 250000, commission: 38750, payMethod: 'Tiền mặt', time: '16:00' },
+  { id: 'B-0210', worker: 'Đặng Thị Hoa', customer: 'Phạm Quốc Toàn', service: 'Vệ sinh nhà cửa', amount: 600000, commission: 93000, payMethod: 'Chuyển khoản App', time: '17:30' },
+];
+export const paymentMethodBreakdown = [
+  { method: 'Chuyển khoản App', pct: 35, color: '#6366F1' },
+  { method: 'ZaloPay', pct: 28, color: '#10B981' },
+  { method: 'Tiền mặt', pct: 22, color: '#F59E0B' },
+  { method: 'MoMo', pct: 15, color: '#EC4899' },
+];
+
+// 2. Active Orders – live tracking with status stages + anomaly flag
+export const liveOrders = [
+  { id: 'BO-001', customer: 'Nguyễn Thị Hương', worker: 'Ngô Quốc Khánh', service: 'Điện nước', address: 'Q.1, TP.HCM', stage: 'Đang sửa chữa', startedAt: '08:00', acceptedAt: '08:05', arrivedAt: '08:20', amount: 280000, lat: 10.7769, lng: 106.7009, anomaly: false },
+  { id: 'BO-002', customer: 'Trần Văn Bình', worker: 'Bùi Văn Nam', service: 'Điện lạnh', address: 'Q.3, TP.HCM', stage: 'Đang kiểm tra lỗi', startedAt: '08:30', acceptedAt: '08:32', arrivedAt: '08:55', amount: 350000, lat: 10.7721, lng: 106.6800, anomaly: false },
+  { id: 'BO-003', customer: 'Phạm Quốc Toàn', worker: 'Đặng Thị Hoa', service: 'Vệ sinh nhà cửa', address: 'Q.Bình Thạnh', stage: 'Đang di chuyển', startedAt: '09:00', acceptedAt: '09:02', arrivedAt: null, amount: 500000, lat: 10.8031, lng: 106.7100, anomaly: true, anomalyMsg: 'Nhận đơn 52 phút chưa bấm "Đã đến nơi"' },
+  { id: 'BO-004', customer: 'Hoàng Minh Châu', worker: 'Phan Minh Trí', service: 'Điện nước', address: 'Q.7, TP.HCM', stage: 'Đang sửa chữa', startedAt: '09:30', acceptedAt: '09:31', arrivedAt: '09:50', amount: 180000, lat: 10.7242, lng: 106.7166, anomaly: false },
+  { id: 'BO-005', customer: 'Vũ Thị Diễm', worker: 'Đinh Văn Bảo', service: 'Sửa khóa', address: 'Q.Tân Bình', stage: 'Đang di chuyển', startedAt: '10:00', acceptedAt: '10:03', arrivedAt: null, amount: 200000, lat: 10.8009, lng: 106.6519, anomaly: true, anomalyMsg: 'Nhận đơn 48 phút chưa bấm "Đã đến nơi"' },
+  { id: 'BO-006', customer: 'Đỗ Văn Hậu', worker: 'Trịnh Thị Thu', service: 'Vệ sinh nhà cửa', address: 'Q.Gò Vấp', stage: 'Đang kiểm tra lỗi', startedAt: '10:15', acceptedAt: '10:17', arrivedAt: '10:40', amount: 400000, lat: 10.8380, lng: 106.6728, anomaly: false },
+];
+
+// 3. Online Workers – with skill, district, wallet balance
+export const onlineWorkersList = [
+  { id: 'W010', name: 'Bùi Văn Nam', skill: 'Điện lạnh', district: 'Q.3', walletBalance: 8500000, status: 'online', rating: 4.8 },
+  { id: 'W011', name: 'Đặng Thị Hoa', skill: 'Vệ sinh nhà cửa', district: 'Q.Bình Thạnh', walletBalance: 2100000, status: 'busy', rating: 4.6 },
+  { id: 'W012', name: 'Ngô Quốc Khánh', skill: 'Điện nước', district: 'Q.1', walletBalance: 12300000, status: 'online', rating: 4.9 },
+  { id: 'W015', name: 'Phan Minh Trí', skill: 'Điện nước', district: 'Q.7', walletBalance: 4600000, status: 'online', rating: 4.7 },
+  { id: 'W016', name: 'Trịnh Thị Thu', skill: 'Vệ sinh nhà cửa', district: 'Q.Gò Vấp', walletBalance: 800000, status: 'busy', rating: 4.5 },
+  { id: 'W017', name: 'Đinh Văn Bảo', skill: 'Sửa khóa', district: 'Q.Tân Bình', walletBalance: 3200000, status: 'online', rating: 4.3 },
+  { id: 'W018', name: 'Lý Thị Mỹ Duyên', skill: 'Điện lạnh', district: 'Q.10', walletBalance: 150000, status: 'online', rating: 4.1 },
+  { id: 'W019', name: 'Võ Minh Khoa', skill: 'Điện lạnh', district: 'Q.Tân Phú', walletBalance: 6700000, status: 'online', rating: 4.7 },
+  { id: 'W020', name: 'Huỳnh Thị Lan', skill: 'Vệ sinh nhà cửa', district: 'Q.12', walletBalance: 1900000, status: 'busy', rating: 4.4 },
+  { id: 'W021', name: 'Trần Văn Hùng', skill: 'Điện nước', district: 'Q.Thủ Đức', walletBalance: 5400000, status: 'online', rating: 4.6 },
+];
+export const skillDemand = [
+  { skill: 'Điện lạnh', online: 3, needed: 8, color: '#6366F1' },
+  { skill: 'Điện nước', online: 3, needed: 5, color: '#10B981' },
+  { skill: 'Vệ sinh nhà cửa', online: 3, needed: 4, color: '#F59E0B' },
+  { skill: 'Sửa khóa', online: 1, needed: 2, color: '#EC4899' },
+];
+
+// 4. New Users – source attribution + fraud signals
+export const newUsersToday = [
+  { id: 'NU001', name: 'Phan Thị Ngân', phone: '0901000001', source: 'Facebook Ads', ip: '113.22.45.101', device: 'iPhone 14', joinedAt: '07:15', suspicious: false },
+  { id: 'NU002', name: 'Lê Minh Quân', phone: '0902000002', source: 'Google Search', ip: '113.22.45.102', device: 'Samsung S23', joinedAt: '07:42', suspicious: false },
+  { id: 'NU003', name: 'Nguyễn Văn Tài', phone: '0903000003', source: 'Referral (REF2025)', ip: '171.225.10.55', device: 'Xiaomi 12', joinedAt: '08:10', suspicious: false },
+  { id: 'NU004', name: 'Tài khoản ảo 1', phone: '0904000004', source: 'Referral (REF2025)', ip: '171.225.10.55', device: 'Xiaomi 12', joinedAt: '08:11', suspicious: true, fraudNote: 'Cùng IP + thiết bị với NU003' },
+  { id: 'NU005', name: 'Tài khoản ảo 2', phone: '0905000005', source: 'Referral (REF2025)', ip: '171.225.10.55', device: 'Xiaomi 12', joinedAt: '08:12', suspicious: true, fraudNote: 'Cùng IP + thiết bị với NU003' },
+  { id: 'NU006', name: 'Tài khoản ảo 3', phone: '0906000006', source: 'Referral (REF2025)', ip: '171.225.10.55', device: 'Xiaomi 12', joinedAt: '08:13', suspicious: true, fraudNote: 'Cùng IP + thiết bị với NU003' },
+  { id: 'NU007', name: 'Trần Thị Kim', phone: '0907000007', source: 'Facebook Ads', ip: '42.116.88.200', device: 'iPhone 13', joinedAt: '09:30', suspicious: false },
+  { id: 'NU008', name: 'Đỗ Quang Vinh', phone: '0908000008', source: 'Google Search', ip: '14.225.12.99', device: 'Oppo A96', joinedAt: '10:05', suspicious: false },
+];
+export const userSourceBreakdown = [
+  { source: 'Facebook Ads', count: 7, pct: 39, color: '#6366F1' },
+  { source: 'Google Search', count: 5, pct: 28, color: '#10B981' },
+  { source: 'Referral', count: 4, pct: 22, color: '#F59E0B' },
+  { source: 'Khác', count: 2, pct: 11, color: '#94A3B8' },
+];
+
+// 5. Chart data point insights
+export const chartDayInsights = {
+  T2: { note: 'Đầu tuần bình thường, không có sự kiện đặc biệt.', topWorkers: [] },
+  T3: { note: 'Tăng nhẹ do chiến dịch SMS nhắc lịch bảo dưỡng định kỳ.', topWorkers: ['Ngô Quốc Khánh', 'Bùi Văn Nam'] },
+  T4: { note: 'Giảm nhẹ so với T3, thời tiết mát mẻ ảnh hưởng nhu cầu điện lạnh.', topWorkers: [] },
+  T5: { note: 'Đỉnh giữa tuần – nhiều văn phòng đặt dịch vụ vệ sinh định kỳ.', topWorkers: ['Đặng Thị Hoa', 'Trịnh Thị Thu', 'Ngô Quốc Khánh'] },
+  T6: { note: 'Giảm do một số thợ nghỉ sớm cuối tuần.', topWorkers: [] },
+  T7: { note: '🎉 Doanh thu T7 đạt đỉnh nhờ sự kiện "Khuyến mãi cuối tuần – Giảm 20% phí gọi thợ". Lượng đơn tăng 68% so với T7 tuần trước.', topWorkers: ['Bùi Văn Nam', 'Ngô Quốc Khánh', 'Phan Minh Trí'] },
+  CN: { note: 'Cuối tuần – chủ yếu dịch vụ vệ sinh nhà và sửa chữa gia đình.', topWorkers: ['Đặng Thị Hoa', 'Đinh Văn Bảo'] },
+};
+
+// 6. Cancelled orders detail
+export const cancelledOrders = [
+  { id: 'C-0101', customer: 'Trần Văn Bình', worker: 'Lê Quang Huy', service: 'Điện lạnh', amount: 350000, cancelledAt: '2026-04-28 10:30', reason: 'Thợ bận', cancelledBy: 'Thợ' },
+  { id: 'C-0102', customer: 'Vũ Thị Diễm', worker: 'Võ Thị Lan', service: 'Sửa khóa', amount: 200000, cancelledAt: '2026-04-28 11:15', reason: 'Khách đổi ý', cancelledBy: 'Khách' },
+  { id: 'C-0103', customer: 'Đỗ Văn Hậu', worker: 'Trịnh Thị Thu', service: 'Vệ sinh nhà cửa', amount: 400000, cancelledAt: '2026-04-27 09:00', reason: 'Gọi không nghe máy', cancelledBy: 'Hệ thống' },
+  { id: 'C-0104', customer: 'Hoàng Minh Châu', worker: 'Bùi Văn Nam', service: 'Điện lạnh', amount: 300000, cancelledAt: '2026-04-27 14:20', reason: 'Thợ bận', cancelledBy: 'Thợ' },
+  { id: 'C-0105', customer: 'Bùi Thị Nga', worker: 'Phan Minh Trí', service: 'Điện nước', amount: 180000, cancelledAt: '2026-04-26 16:00', reason: 'Khách đổi ý', cancelledBy: 'Khách' },
+  { id: 'C-0106', customer: 'Phạm Quốc Toàn', worker: 'Đặng Thị Hoa', service: 'Vệ sinh nhà cửa', amount: 500000, cancelledAt: '2026-04-26 17:30', reason: 'Gọi không nghe máy', cancelledBy: 'Hệ thống' },
+];
+
+// 7. Service breakdown detail (sub-categories)
+export const serviceSubBreakdown = {
+  'Điện lạnh': [
+    { name: 'Bơm gas điều hòa', count: 89, pct: 60, color: '#6366F1' },
+    { name: 'Vệ sinh máy lạnh', count: 37, pct: 25, color: '#8B5CF6' },
+    { name: 'Sửa board mạch', count: 14, pct: 9, color: '#A78BFA' },
+    { name: 'Khác', count: 8, pct: 6, color: '#C4B5FD' },
+  ],
+  'Điện nước': [
+    { name: 'Thông cống nghẹt', count: 38, pct: 43, color: '#10B981' },
+    { name: 'Thay vòi nước', count: 27, pct: 30, color: '#34D399' },
+    { name: 'Sửa bình nóng lạnh', count: 15, pct: 17, color: '#6EE7B7' },
+    { name: 'Lắp đặt đường ống', count: 9, pct: 10, color: '#A7F3D0' },
+  ],
+  'Vệ sinh nhà cửa': [
+    { name: 'Dọn dẹp căn hộ 1PN', count: 32, pct: 44, color: '#F59E0B' },
+    { name: 'Vệ sinh nhà bếp', count: 24, pct: 33, color: '#FBBF24' },
+    { name: 'Dọn dẹp căn hộ 2PN', count: 12, pct: 17, color: '#FCD34D' },
+    { name: 'Vệ sinh kính cửa', count: 4, pct: 6, color: '#FDE68A' },
+  ],
+  'Sửa khóa': [
+    { name: 'Mở khóa thông thường', count: 18, pct: 55, color: '#EC4899' },
+    { name: 'Thay ổ khóa', count: 9, pct: 27, color: '#F472B6' },
+    { name: 'Mở khóa điện tử', count: 6, pct: 18, color: '#FBCFE8' },
+  ],
+};

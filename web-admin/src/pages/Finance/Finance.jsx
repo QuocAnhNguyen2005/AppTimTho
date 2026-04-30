@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import {
   Download, CheckCircle, Clock, MapPin, Zap,
-  DollarSign, AlertCircle, X, Filter
+  DollarSign, AlertCircle
 } from 'lucide-react';
 import { activeBookings, withdrawalRequests, financeExportData } from '../../utils/mockData';
-import { formatVND, getBookingStatusConfig, formatDate } from '../../utils/format';
+import { formatVND, getBookingStatusConfig } from '../../utils/format';
 import './Finance.css';
 
 // ─── Simple Map Placeholder ───────────────────────────────────────────────────
@@ -139,7 +139,7 @@ const ExportSection = () => {
 // ─── Finance Page ─────────────────────────────────────────────────────────────
 const Finance = () => {
   const [activeTab, setActiveTab] = useState('bookings');
-  const [bookings] = useState(activeBookings);
+  const bookings = activeBookings;
   const [withdrawals, setWithdrawals] = useState(withdrawalRequests);
   const [toast, setToast] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');

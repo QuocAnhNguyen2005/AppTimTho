@@ -132,12 +132,31 @@ const TierRulesEditor = ({ rules, onSave }) => {
 const Users = () => {
   const [activeTab, setActiveTab] = useState('list');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [users, setUsers] = useState(customerList);
   const [ticketList, setTicketList] = useState(tickets);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [toast, setToast] = useState(null);
   const [currentRules, setCurrentRules] = useState(tierRules);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate Skeleton Loading
+  React.useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
+
+  // Debounce for search
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -170,7 +189,7 @@ const Users = () => {
   };
 
   const filteredUsers = users.filter(
-    (u) => u.name.toLowerCase().includes(search.toLowerCase()) || u.phone.includes(search)
+    (u) => u.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || u.phone.includes(debouncedSearch)
   );
 
   const openTickets = ticketList.filter((t) => t.status === 'open').length;
@@ -225,31 +244,52 @@ const Users = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="cdp-table-row-click" onClick={() => setSelectedCustomer(u)}>
-                  <td>
-                    <div className="worker-cell">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=8B5CF6&color=fff&size=64`}
-                        alt={u.name}
-                        className="table-avatar"
-                      />
-                      <div>
-                        <div className="cdp-row-name-link">
-                          <p className="worker-name">{u.name}</p>
-                          <span className="cdp-view-hint"><ExternalLink size={11} /> Chi tiết</span>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    <td>
+                      <div className="worker-cell">
+                        <div className="skeleton-avatar"></div>
+                        <div>
+                          <div className="skeleton-text skeleton-title"></div>
+                          <div className="skeleton-text skeleton-sub"></div>
                         </div>
-                        <p className="worker-id">{u.id}</p>
                       </div>
-                    </div>
-                  </td>
-                  <td><TierBadge tier={u.tier} /></td>
-                  <td>{u.phone}</td>
-                  <td><strong>{u.totalOrders}</strong> đơn</td>
-                  <td><strong>{formatVND(u.totalSpent)}</strong></td>
-                  <td>{formatDate(u.joinedAt)}</td>
-                </tr>
-              ))}
+                    </td>
+                    <td><div className="skeleton-text skeleton-badge"></div></td>
+                    <td><div className="skeleton-text skeleton-text-short"></div></td>
+                    <td><div className="skeleton-text skeleton-text-short"></div></td>
+                    <td><div className="skeleton-text skeleton-text-short"></div></td>
+                    <td><div className="skeleton-text skeleton-text-short"></div></td>
+                  </tr>
+                ))
+              ) : (
+                filteredUsers.map((u) => (
+                  <tr key={u.id} className="cdp-table-row-click" onClick={() => setSelectedCustomer(u)}>
+                    <td>
+                      <div className="worker-cell">
+                        <img
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=8B5CF6&color=fff&size=64`}
+                          alt={u.name}
+                          className="table-avatar"
+                        />
+                        <div>
+                          <div className="cdp-row-name-link">
+                            <p className="worker-name">{u.name}</p>
+                            <span className="cdp-view-hint"><ExternalLink size={11} /> Chi tiết</span>
+                          </div>
+                          <p className="worker-id">{u.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td><TierBadge tier={u.tier} /></td>
+                    <td>{u.phone}</td>
+                    <td><strong>{u.totalOrders}</strong> đơn</td>
+                    <td><strong>{formatVND(u.totalSpent)}</strong></td>
+                    <td>{formatDate(u.joinedAt)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

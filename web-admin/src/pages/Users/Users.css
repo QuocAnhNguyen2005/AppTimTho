@@ -205,3 +205,51 @@
 .tier-rule-field input:disabled { opacity: 0.5; }
 
 .tier-rule-sep { color: var(--text-secondary); font-size: 1.1rem; margin-top: 18px; }
+
+/* ─── Skeleton Loading ──────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-text, .skeleton-avatar, .skeleton-badge {
+  background: #f6f7f8;
+  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%; 
+  animation-duration: 1.5s;
+  animation-fill-mode: forwards; 
+  animation-iteration-count: infinite;
+  animation-name: shimmer;
+  animation-timing-function: linear;
+  border-radius: 4px;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-title {
+  width: 120px;
+  height: 14px;
+  margin-bottom: 6px;
+}
+
+.skeleton-sub {
+  width: 80px;
+  height: 12px;
+}
+
+.skeleton-badge {
+  width: 60px;
+  height: 20px;
+  border-radius: 20px;
+}
+
+.skeleton-text-short {
+  width: 80px;
+  height: 14px;
+}

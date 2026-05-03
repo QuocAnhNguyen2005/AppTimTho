@@ -212,4 +212,129 @@ router.get('/:worker_id/dashboard-stats', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/workers/:worker_id/wallet
+ * Lấy số dư và thống kê ví
+ */
+router.get('/:worker_id/wallet', async (req, res) => {
+  try {
+    const { worker_id } = req.params;
+    
+    // balance from workers table
+    const workerRes = await db.query('SELECT balance FROM workers WHERE id = $1', [worker_id]);
+    if (workerRes.rowCount === 0) return res.status(404).json({ error: 'Không tìm thấy thợ' });
+    
+    const balance = parseFloat(workerRes.rows[0].balance) || 0;
+
+    // total_earned, total_commission from jobs
+    const statsRes = await db.query(`
+      SELECT 
+        SUM(total_price) as total_revenue,
+        SUM(total_price * 0.845) as total_earned,
+        SUM(total_price * 0.155) as total_commission
+      FROM jobs 
+      WHERE worker_id = $1 AND status = 'COMPLETED'
+    `, [worker_id]);
+
+    const thisMonthRes = await db.query(`
+      SELECT SUM(total_price * 0.845) as this_month_earned
+      FROM jobs 
+      WHERE worker_id = $1 AND status = 'COMPLETED'
+      AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+      AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+    `, [worker_id]);
+
+    res.status(200).json({
+      balance,
+      total_earned: parseFloat(statsRes.rows[0].total_earned) || 0,
+      total_commission: parseFloat(statsRes.rows[0].total_commission) || 0,
+      this_month_earned: parseFloat(thisMonthRes.rows[0].this_month_earned) || 0
+    });
+  } catch (error) {
+    console.error('Lỗi lấy ví:', error);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
+/**
+ * GET /api/workers/:worker_id/transactions
+ * Lấy lịch sử giao dịch (Mô phỏng từ bảng jobs)
+ */
+router.get('/:worker_id/transactions', async (req, res) => {
+  try {
+    const { worker_id } = req.params;
+    
+    // Since we don't have a transactions table, we mock it using completed jobs
+    const jobsRes = await db.query(`
+      SELECT 
+        id as job_id, 
+        total_price as amount,
+        (total_price * 0.155) as commission,
+        (total_price * 0.845) as net_amount,
+        created_at,
+        'INCOME' as type
+      FROM jobs
+      WHERE worker_id = $1 AND status = 'COMPLETED'
+      ORDER BY created_at DESC
+    `, [worker_id]);
+
+    const transactions = jobsRes.rows.map((row, index) => ({
+      ...row,
+      id: index + 1 // mock transaction ID
+    }));
+
+    res.status(200).json({ transactions });
+  } catch (error) {
+    console.error('Lỗi lấy transactions:', error);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
+/**
+ * GET /api/workers/:worker_id/reviews
+ * Lấy danh sách đánh giá của thợ
+ */
+router.get('/:worker_id/reviews', async (req, res) => {
+  try {
+    const { worker_id } = req.params;
+
+    const reviewsRes = await db.query(`
+      SELECT r.id, r.rating, r.comment, r.created_at, r.job_id, u.full_name as customer_name
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.worker_id = $1
+      ORDER BY r.created_at DESC
+    `, [worker_id]);
+
+    const statsRes = await db.query(`
+      SELECT average_rating, total_reviews FROM workers WHERE id = $1
+    `, [worker_id]);
+
+    const distributionRes = await db.query(`
+      SELECT rating, COUNT(*) as count 
+      FROM reviews 
+      WHERE worker_id = $1 
+      GROUP BY rating
+    `, [worker_id]);
+
+    const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    distributionRes.rows.forEach(r => {
+      distribution[r.rating] = parseInt(r.count);
+    });
+
+    res.status(200).json({
+      reviews: reviewsRes.rows,
+      stats: {
+        average_rating: parseFloat(statsRes.rows[0]?.average_rating) || 0,
+        total_reviews: parseInt(statsRes.rows[0]?.total_reviews) || 0,
+        rating_distribution: distribution
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi lấy reviews:', error);
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
 module.exports = router;

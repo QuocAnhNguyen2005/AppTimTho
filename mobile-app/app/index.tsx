@@ -23,5 +23,5 @@ export default function Index() {
     return <Redirect href="/(worker)/home" />;
   }
 
-  return <Redirect href="/role-selection" />;
+  return <Redirect href="/login" />;
 }

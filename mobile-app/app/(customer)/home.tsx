@@ -28,6 +28,11 @@ export default function CustomerHome() {
     { id: 3, name: 'Lê Văn C', skill: 'Sửa Nước', rating: 5.0, avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
   ];
 
+  const previousWorkers = [
+    { id: 4, name: 'Phạm Minh D', skill: 'Thông Tắc', rating: 5.0, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026712d', lastBooked: '2 tuần trước' },
+    { id: 5, name: 'Hoàng Quốc E', skill: 'Sửa Điện', rating: 4.7, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026734d', lastBooked: '1 tháng trước' },
+  ];
+
   const handleOpenWorker = (worker: any) => {
     setSelectedWorker(worker);
     bottomSheetRef.current?.expand();
@@ -99,6 +104,26 @@ export default function CustomerHome() {
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+
+          {/* Previous Workers (Re-book) */}
+          <View style={[styles.sectionContainer, { marginTop: 8 }]}>
+            <Text style={styles.sectionTitle}>Thợ bạn đã thuê</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24, paddingHorizontal: 24 }}>
+              {previousWorkers.map(worker => (
+                <TouchableOpacity key={worker.id} style={styles.workerCard} onPress={() => handleOpenWorker(worker)}>
+                  <View style={styles.rebookBadge}>
+                    <Ionicons name="refresh" size={12} color="#fff" />
+                    <Text style={styles.rebookBadgeText}>Đặt lại</Text>
+                  </View>
+                  <Image source={{ uri: worker.avatar }} style={styles.workerAvatar} cachePolicy="memory-disk" />
+                  <Text style={styles.workerName}>{worker.name}</Text>
+                  <Text style={styles.workerSkill}>{worker.skill}</Text>
+                  <Text style={styles.lastBookedText}>{worker.lastBooked}</Text>
+                </TouchableOpacity>
+              ))}
+              <View style={{ width: 48 }} />
+            </ScrollView>
           </View>
 
           {/* Featured Workers */}
@@ -320,6 +345,32 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
     textAlign: 'center',
+  },
+  lastBookedText: {
+    fontSize: 11,
+    color: '#999',
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  rebookBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 10,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  rebookBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginLeft: 2,
   },
   ratingRow: {
     flexDirection: 'row',

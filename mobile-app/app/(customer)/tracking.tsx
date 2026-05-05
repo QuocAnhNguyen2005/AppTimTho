@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 
 export default function TrackingScreen() {
   const router = useRouter();
-  const [status, setStatus] = useState<'finding' | 'accepted' | 'arriving' | 'working' | 'completed'>('finding');
+  const [status, setStatus] = useState<'finding' | 'accepted' | 'arriving' | 'working' | 'reviewing_proof' | 'completed'>('finding');
   const [showReview, setShowReview] = useState(false);
   const [rating, setRating] = useState(0);
 
@@ -19,8 +19,7 @@ export default function TrackingScreen() {
       setTimeout(() => setStatus('working'), 4000);
     } else if (status === 'working') {
       setTimeout(() => {
-        setStatus('completed');
-        setShowReview(true);
+        setStatus('reviewing_proof');
       }, 5000);
     }
   }, [status]);
@@ -34,6 +33,13 @@ export default function TrackingScreen() {
           </View>
           <Text style={styles.findingText}>Đang quét tìm thợ xung quanh...</Text>
           <Text style={styles.findingSubtext}>Vui lòng giữ ứng dụng mở</Text>
+          
+          <TouchableOpacity 
+            style={styles.cancelBtn} 
+            onPress={() => router.back()}
+          >
+            <Text style={styles.cancelBtnText}>Hủy Đơn</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -73,7 +79,8 @@ export default function TrackingScreen() {
             <Text style={styles.statusValue}>
               {status === 'accepted' ? 'Đã nhận đơn' :
                status === 'arriving' ? 'Đang tới (Dự kiến 5 phút)' :
-               status === 'working' ? 'Đang sửa chữa' : 'Hoàn thành'}
+               status === 'working' ? 'Đang sửa chữa' : 
+               status === 'reviewing_proof' ? 'Chờ xác nhận nghiệm thu' : 'Hoàn thành'}
             </Text>
           </View>
 
@@ -86,6 +93,25 @@ export default function TrackingScreen() {
               <TouchableOpacity style={styles.actionBtn}>
                 <Ionicons name="chatbubble" size={20} color="#0066CC" />
                 <Text style={styles.actionBtnText}>Nhắn tin</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {status === 'reviewing_proof' && (
+            <View style={styles.proofContainer}>
+              <Text style={styles.proofTitle}>Thợ đã gửi ảnh nghiệm thu</Text>
+              <View style={styles.proofImageMock}>
+                <Ionicons name="image-outline" size={48} color="#999" />
+                <Text style={{color: '#666', marginTop: 8}}>Ảnh điều hòa đã sửa xong</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.confirmProofBtn}
+                onPress={() => {
+                  setStatus('completed');
+                  setShowReview(true);
+                }}
+              >
+                <Text style={styles.confirmProofBtnText}>Xác nhận thanh toán & Đánh giá</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -171,5 +197,12 @@ const styles = StyleSheet.create({
   modalText: { fontSize: 14, textAlign: 'center', color: '#444', lineHeight: 22, marginBottom: 20 },
   starsContainer: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   submitBtn: { width: '100%', backgroundColor: '#0066CC', padding: 16, borderRadius: 12, alignItems: 'center' },
-  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  cancelBtn: { marginTop: 40, paddingVertical: 12, paddingHorizontal: 32, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)' },
+  cancelBtnText: { color: '#666', fontSize: 16, fontWeight: '500' },
+  proofContainer: { marginTop: 16, borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 16 },
+  proofTitle: { fontSize: 15, fontWeight: 'bold', marginBottom: 12, color: '#333' },
+  proofImageMock: { height: 150, backgroundColor: '#F5F5F5', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  confirmProofBtn: { backgroundColor: '#4CAF50', padding: 16, borderRadius: 12, alignItems: 'center' },
+  confirmProofBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

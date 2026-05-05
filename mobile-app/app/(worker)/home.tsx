@@ -137,7 +137,7 @@ export default function WorkerHome() {
             <Animated.View style={[styles.radarCircle, { width: 100, height: 100, borderRadius: 50 }, animatedPulseStyle1]} />
             <Animated.View style={[styles.radarCircle, { width: 100, height: 100, borderRadius: 50, position: 'absolute' }, animatedPulseStyle2]} />
             <Ionicons name="location" size={40} color="#E67E22" style={{ position: 'absolute' }} />
-            <Text style={styles.onlineText}>Đang chờ đơn mới xung quanh bạn...</Text>
+            <Text style={styles.onlineText}>Đang quét các đơn sửa chữa quanh bạn...</Text>
           </View>
         )}
       </View>

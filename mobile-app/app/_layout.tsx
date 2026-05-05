@@ -34,7 +34,6 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />
-          <Stack.Screen name="role-selection" />
           <Stack.Screen name="(customer)" />
           <Stack.Screen name="(worker)" />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />

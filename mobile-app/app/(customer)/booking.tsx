@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 export default function BookingScreen() {
   const router = useRouter();
   const [description, setDescription] = useState('');
+  const [timeMode, setTimeMode] = useState<'now' | 'schedule'>('now');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -32,9 +33,31 @@ export default function BookingScreen() {
           </View>
         </View>
 
-        {/* Step 2: Issue Description */}
+        {/* Step 2: Time Selection */}
         <View style={styles.section}>
-          <Text style={styles.stepTitle}>2. Mô tả vấn đề</Text>
+          <Text style={styles.stepTitle}>2. Thời gian sửa chữa</Text>
+          <View style={styles.timeButtons}>
+            <TouchableOpacity 
+              style={[styles.timeBtn, timeMode === 'now' && styles.timeBtnActive]}
+              onPress={() => setTimeMode('now')}
+            >
+              <Text style={timeMode === 'now' ? styles.timeEmojiActive : styles.timeEmoji}>⚡</Text>
+              <Text style={[styles.timeBtnText, timeMode === 'now' && styles.timeBtnTextActive]}>Đến ngay lập tức</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.timeBtn, timeMode === 'schedule' && styles.timeBtnActive]}
+              onPress={() => setTimeMode('schedule')}
+            >
+              <Text style={timeMode === 'schedule' ? styles.timeEmojiActive : styles.timeEmoji}>📅</Text>
+              <Text style={[styles.timeBtnText, timeMode === 'schedule' && styles.timeBtnTextActive]}>Chọn giờ hẹn</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Step 3: Issue Description */}
+        <View style={styles.section}>
+          <Text style={styles.stepTitle}>3. Mô tả vấn đề</Text>
           <TextInput
             style={styles.textInput}
             placeholder="Mô tả chi tiết tình trạng lỗi để thợ chuẩn bị dụng cụ..."
@@ -55,9 +78,9 @@ export default function BookingScreen() {
           </View>
         </View>
 
-        {/* Step 3: Confirmation */}
+        {/* Step 4: Confirmation */}
         <View style={styles.section}>
-          <Text style={styles.stepTitle}>3. Chi phí dự kiến</Text>
+          <Text style={styles.stepTitle}>4. Chi phí dự kiến</Text>
           <View style={styles.priceBox}>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Phí kiểm tra ban đầu:</Text>
@@ -160,6 +183,44 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
     fontSize: 14,
+  },
+  timeButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  timeBtn: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+  },
+  timeBtnActive: {
+    borderColor: '#0066CC',
+    backgroundColor: '#F0F7FF',
+  },
+  timeEmoji: {
+    fontSize: 24,
+    marginBottom: 8,
+    opacity: 0.5,
+  },
+  timeEmojiActive: {
+    fontSize: 24,
+    marginBottom: 8,
+    opacity: 1,
+  },
+  timeBtnText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  timeBtnTextActive: {
+    color: '#0066CC',
+    fontWeight: 'bold',
   },
   mediaButtons: {
     flexDirection: 'row',

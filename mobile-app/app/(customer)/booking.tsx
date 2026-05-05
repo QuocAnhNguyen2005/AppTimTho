@@ -1,16 +1,71 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+import { createJob } from '../../services/jobService';
+import { getOnlineWorkers } from '../../services/workerService';
 
 export default function BookingScreen() {
   const router = useRouter();
+  const { workerId } = useLocalSearchParams();
+  const { user } = useAuth();
+  
   const [description, setDescription] = useState('');
   const [timeMode, setTimeMode] = useState<'now' | 'schedule'>('now');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleBooking = async () => {
+    if (!description.trim()) {
+      return Alert.alert('Lỗi', 'Vui lòng mô tả vấn đề');
+    }
+    if (!user) {
+      return Alert.alert('Lỗi', 'Bạn chưa đăng nhập');
+    }
+
+    setIsLoading(true);
+
+    let finalWorkerId = workerId ? parseInt(workerId as string) : null;
+    
+    // Nếu chưa chọn thợ, tự động chọn thợ đầu tiên đang online
+    if (!finalWorkerId) {
+      const workersRes = await getOnlineWorkers(1, 0);
+      if (workersRes.success && workersRes.workers && workersRes.workers.length > 0) {
+        finalWorkerId = workersRes.workers[0].id;
+      } else {
+        setIsLoading(false);
+        return Alert.alert('Thông báo', 'Hiện không có thợ nào online. Vui lòng thử lại sau.');
+      }
+    }
+
+    const scheduledTime = new Date();
+    if (timeMode === 'schedule') {
+      scheduledTime.setHours(scheduledTime.getHours() + 2); // Giả lập hẹn sau 2 tiếng
+    }
+
+    const result = await createJob({
+      customer_id: user.id,
+      worker_id: finalWorkerId,
+      scheduled_time: scheduledTime.toISOString(),
+      address: '123 Đường Nguyễn Văn Linh, Quận 7', // Mock address for now
+      description: description,
+    });
+
+    setIsLoading(false);
+
+    if (result.success && result.job) {
+      router.push(`/(customer)/tracking?jobId=${result.job.id}`);
+    } else {
+      Alert.alert('Lỗi', result.error || 'Có lỗi xảy ra khi đặt thợ');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={{ position: 'absolute', left: 16, top: 16 }} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Đặt thợ sửa chữa</Text>
       </View>
 
@@ -66,16 +121,6 @@ export default function BookingScreen() {
             value={description}
             onChangeText={setDescription}
           />
-          <View style={styles.mediaButtons}>
-            <TouchableOpacity style={styles.mediaBtn}>
-              <Ionicons name="camera-outline" size={24} color="#0066CC" />
-              <Text style={styles.mediaBtnText}>Chụp ảnh</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.mediaBtn}>
-              <Ionicons name="mic-outline" size={24} color="#0066CC" />
-              <Text style={styles.mediaBtnText}>Ghi âm</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* Step 4: Confirmation */}
@@ -97,10 +142,17 @@ export default function BookingScreen() {
       <View style={styles.bottomBar}>
         <TouchableOpacity 
           style={styles.bookButton}
-          onPress={() => router.push('/(customer)/tracking')}
+          onPress={handleBooking}
+          disabled={isLoading}
         >
-          <Text style={styles.bookButtonText}>Tìm Thợ Ngay</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Text style={styles.bookButtonText}>Tìm Thợ Ngay</Text>
+              <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

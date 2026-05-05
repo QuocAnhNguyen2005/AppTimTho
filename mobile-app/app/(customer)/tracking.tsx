@@ -1,28 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { getJobById } from '../../services/jobService';
 
 export default function TrackingScreen() {
   const router = useRouter();
+  const { jobId } = useLocalSearchParams();
   const [status, setStatus] = useState<'finding' | 'accepted' | 'arriving' | 'working' | 'reviewing_proof' | 'completed'>('finding');
   const [showReview, setShowReview] = useState(false);
   const [rating, setRating] = useState(0);
+  const [workerInfo, setWorkerInfo] = useState<any>(null);
+  const [totalPrice, setTotalPrice] = useState<number>(150000);
 
-  // Mock flow transition
   useEffect(() => {
-    if (status === 'finding') {
-      setTimeout(() => setStatus('accepted'), 3000);
-    } else if (status === 'accepted') {
-      setTimeout(() => setStatus('arriving'), 3000);
-    } else if (status === 'arriving') {
-      setTimeout(() => setStatus('working'), 4000);
-    } else if (status === 'working') {
-      setTimeout(() => {
-        setStatus('reviewing_proof');
-      }, 5000);
-    }
-  }, [status]);
+    if (!jobId) return;
+
+    const pollJob = async () => {
+      const result = await getJobById(parseInt(jobId as string));
+      if (result.success && result.job) {
+        const job = result.job;
+        if (job.worker_name) {
+          setWorkerInfo({
+            name: job.worker_name,
+            phone: job.worker_phone,
+          });
+        }
+        
+        if (job.total_price) {
+          setTotalPrice(job.total_price);
+        }
+
+        // Map backend status to mobile status
+        if (job.status === 'PENDING') {
+          setStatus('finding');
+        } else if (job.status === 'ACCEPTED') {
+          // Simplification: just show accepted. In a full app, we'd add 'ARRIVING', 'WORKING' to DB
+          setStatus(prev => (prev === 'finding' ? 'accepted' : prev));
+        } else if (job.status === 'COMPLETED' && status !== 'completed') {
+          setStatus('reviewing_proof');
+        }
+      }
+    };
+
+    // Initial poll
+    pollJob();
+
+    // Setup polling every 3 seconds
+    const intervalId = setInterval(pollJob, 3000);
+    return () => clearInterval(intervalId);
+  }, [jobId, status]);
 
   const renderContent = () => {
     if (status === 'finding') {

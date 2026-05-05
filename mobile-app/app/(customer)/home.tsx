@@ -1,17 +1,35 @@
-import React, { useRef, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, SafeAreaView, Share } from 'react-native';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, SafeAreaView, Share, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { Image } from 'expo-image';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { getOnlineWorkers, WorkerInfo } from '../../services/workerService';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CustomerHome() {
   const router = useRouter();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['50%', '75%'], []);
-  const [selectedWorker, setSelectedWorker] = useState<any>(null);
+  const [selectedWorker, setSelectedWorker] = useState<WorkerInfo | null>(null);
+  const [workers, setWorkers] = useState<WorkerInfo[]>([]);
+  const [loadingWorkers, setLoadingWorkers] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchWorkers();
+  }, []);
+
+  const fetchWorkers = async () => {
+    setLoadingWorkers(true);
+    const result = await getOnlineWorkers();
+    if (result.success && result.workers) {
+      setWorkers(result.workers);
+    }
+    setLoadingWorkers(false);
+  };
 
   const services = [
     { id: 1, name: 'Sửa Điện', icon: 'flash', color: '#FF9800' },
@@ -20,12 +38,6 @@ export default function CustomerHome() {
     { id: 4, name: 'Thông Tắc', icon: 'construct', color: '#795548' },
     { id: 5, name: 'Thợ Xây', icon: 'hammer', color: '#607D8B' },
     { id: 6, name: 'Vệ Sinh', icon: 'leaf', color: '#4CAF50' },
-  ];
-
-  const workers = [
-    { id: 1, name: 'Nguyễn Văn A', skill: 'Sửa Điện Lạnh', rating: 4.9, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
-    { id: 2, name: 'Trần Thị B', skill: 'Vệ Sinh Nhà', rating: 4.8, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
-    { id: 3, name: 'Lê Văn C', skill: 'Sửa Nước', rating: 5.0, avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
   ];
 
   const previousWorkers = [
@@ -43,7 +55,7 @@ export default function CustomerHome() {
     const url = Linking.createURL(`/(customer)/profile?workerId=${selectedWorker.id}`);
     try {
       await Share.share({
-        message: `Tôi muốn giới thiệu thợ ${selectedWorker.name} cực kỳ uy tín trên App Tìm Thợ. Đặt lịch ngay: ${url}`,
+        message: `Tôi muốn giới thiệu thợ ${selectedWorker.full_name} cực kỳ uy tín trên App Tìm Thợ. Đặt lịch ngay: ${url}`,
       });
     } catch (error) {
       console.log(error);
@@ -58,7 +70,7 @@ export default function CustomerHome() {
           <View style={styles.header}>
             <View>
               <Text style={styles.greeting}>Xin chào,</Text>
-              <Text style={styles.userName}>Khách Hàng</Text>
+              <Text style={styles.userName}>{user?.full_name || 'Khách Hàng'}</Text>
             </View>
             <TouchableOpacity onPress={() => router.push('/(customer)/profile')}>
               <Ionicons name="person-circle" size={48} color="#0066CC" />
@@ -129,26 +141,31 @@ export default function CustomerHome() {
           {/* Featured Workers */}
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Thợ nổi bật gần bạn</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24, paddingHorizontal: 24 }}>
-              {workers.map(worker => (
-                <TouchableOpacity key={worker.id} style={styles.workerCard} onPress={() => handleOpenWorker(worker)}>
-                  <Image source={{ uri: worker.avatar }} style={styles.workerAvatar} cachePolicy="memory-disk" />
-                  <Text style={styles.workerName}>{worker.name}</Text>
-                  <Text style={styles.workerSkill}>{worker.skill}</Text>
-                  <View style={styles.ratingRow}>
-                    <Ionicons name="star" size={14} color="#FFD700" />
-                    <Text style={styles.ratingText}>{worker.rating}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-              <View style={{ width: 48 }} />
-            </ScrollView>
+            {loadingWorkers ? (
+              <ActivityIndicator size="large" color="#0066CC" style={{ marginVertical: 20 }} />
+            ) : workers.length === 0 ? (
+              <Text style={{ textAlign: 'center', color: '#999', marginVertical: 20 }}>Hiện chưa có thợ nào online</Text>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24, paddingHorizontal: 24 }}>
+                {workers.map(worker => (
+                  <TouchableOpacity key={worker.id} style={styles.workerCard} onPress={() => handleOpenWorker(worker)}>
+                    <Image source={{ uri: worker.avatar_url || 'https://i.pravatar.cc/150' }} style={styles.workerAvatar} cachePolicy="memory-disk" />
+                    <Text style={styles.workerName}>{worker.full_name}</Text>
+                    <Text style={styles.workerSkill}>{worker.specialties?.[0] || 'Đa năng'}</Text>
+                    <View style={styles.ratingRow}>
+                      <Ionicons name="star" size={14} color="#FFD700" />
+                      <Text style={styles.ratingText}>{worker.average_rating}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                <View style={{ width: 48 }} />
+              </ScrollView>
+            )}
           </View>
 
           <View style={{ height: 40 }} />
         </ScrollView>
 
-        {/* Worker Details Bottom Sheet */}
         <BottomSheet
           ref={bottomSheetRef}
           index={-1}
@@ -159,23 +176,23 @@ export default function CustomerHome() {
           <BottomSheetView style={styles.sheetContent}>
             {selectedWorker && (
               <>
-                <Image source={{ uri: selectedWorker.avatar }} style={styles.sheetAvatar} cachePolicy="memory-disk" />
+                <Image source={{ uri: selectedWorker.avatar_url || 'https://i.pravatar.cc/150' }} style={styles.sheetAvatar} cachePolicy="memory-disk" />
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 4 }}>
-                  <Text style={styles.sheetName}>{selectedWorker.name}</Text>
+                  <Text style={styles.sheetName}>{selectedWorker.full_name}</Text>
                   <TouchableOpacity onPress={handleShareWorker} style={styles.shareBtn}>
                     <Ionicons name="share-outline" size={24} color="#0066CC" />
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.sheetSkill}>{selectedWorker.skill}</Text>
+                <Text style={styles.sheetSkill}>{selectedWorker.specialties?.join(', ') || 'Đa năng'}</Text>
                 
                 <View style={styles.sheetStats}>
                   <View style={styles.sheetStatItem}>
                     <Ionicons name="star" size={24} color="#FFD700" />
-                    <Text style={styles.sheetStatText}>{selectedWorker.rating} Đánh giá</Text>
+                    <Text style={styles.sheetStatText}>{selectedWorker.average_rating} Đánh giá</Text>
                   </View>
                   <View style={styles.sheetStatItem}>
                     <Ionicons name="briefcase" size={24} color="#0066CC" />
-                    <Text style={styles.sheetStatText}>120+ Việc</Text>
+                    <Text style={styles.sheetStatText}>{selectedWorker.total_reviews} Việc</Text>
                   </View>
                 </View>
 
@@ -183,7 +200,10 @@ export default function CustomerHome() {
                   <TouchableOpacity style={[styles.bookBtn, { flex: 1, backgroundColor: '#E8F1FA' }]} onPress={() => { bottomSheetRef.current?.close(); router.push('/chat'); }}>
                     <Text style={[styles.bookBtnText, { color: '#0066CC' }]}>Nhắn tin</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.bookBtn, { flex: 2 }]} onPress={() => { bottomSheetRef.current?.close(); router.push('/(customer)/booking'); }}>
+                  <TouchableOpacity style={[styles.bookBtn, { flex: 2 }]} onPress={() => { 
+                    bottomSheetRef.current?.close(); 
+                    router.push(`/(customer)/booking?workerId=${selectedWorker.id}`); 
+                  }}>
                     <Text style={styles.bookBtnText}>Đặt thợ ngay</Text>
                   </TouchableOpacity>
                 </View>

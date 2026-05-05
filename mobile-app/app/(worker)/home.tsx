@@ -5,13 +5,16 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withRepeat, withTiming, Easing } from 'react-native-reanimated';
+import { useAuth } from '../../context/AuthContext';
+import { getWorkerJobs, updateJobStatus } from '../../services/jobService';
 
 const { width } = Dimensions.get('window');
 
 export default function WorkerHome() {
   const router = useRouter();
   const [isOnline, setIsOnline] = useState(false);
-  const [hasNewJob, setHasNewJob] = useState(false);
+  const [incomingJob, setIncomingJob] = useState<any>(null);
+  const { user } = useAuth();
 
   const translateX = useSharedValue(0);
   const swipeLimit = width - 48 - 60; // card width minus padding and button size
@@ -19,19 +22,28 @@ export default function WorkerHome() {
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.5);
 
-  // Mock receiving a job when online
+  // Poll jobs when online
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isOnline) {
-      timer = setTimeout(() => {
-        setHasNewJob(true);
-        // Reset swipe
-        translateX.value = 0;
-      }, 5000); // 5 seconds after going online
-    } else {
-      setHasNewJob(false);
-    }
+    let intervalId: NodeJS.Timeout;
     
+    if (isOnline && user?.id) {
+      intervalId = setInterval(async () => {
+        const result = await getWorkerJobs(user.id);
+        if (result.success && result.jobs) {
+          // Look for PENDING jobs
+          const pendingJob = result.jobs.find(j => j.status === 'PENDING');
+          if (pendingJob) {
+            setIncomingJob(pendingJob);
+            translateX.value = 0; // reset swipe
+          } else {
+            setIncomingJob(null);
+          }
+        }
+      }, 3000);
+    } else {
+      setIncomingJob(null);
+    }
+
     if (isOnline) {
       pulseScale.value = withRepeat(withTiming(2, { duration: 1500, easing: Easing.out(Easing.ease) }), -1, false);
       pulseOpacity.value = withRepeat(withTiming(0, { duration: 1500, easing: Easing.out(Easing.ease) }), -1, false);
@@ -39,14 +51,27 @@ export default function WorkerHome() {
       pulseScale.value = 1;
       pulseOpacity.value = 0.5;
     }
-    
-    return () => clearTimeout(timer);
-  }, [isOnline]);
 
-  const handleAcceptJob = () => {
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOnline, user?.id]);
+
+  const handleAcceptJob = async () => {
+    if (!incomingJob) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setHasNewJob(false);
-    router.push('/(worker)/job-detail');
+    
+    // Update status on backend
+    await updateJobStatus(incomingJob.id, 'ACCEPTED');
+    
+    setIncomingJob(null);
+    router.push(`/(worker)/job-detail?jobId=${incomingJob.id}`);
+  };
+
+  const handleRejectJob = async () => {
+    if (!incomingJob) return;
+    await updateJobStatus(incomingJob.id, 'REJECTED');
+    setIncomingJob(null);
   };
 
   const panGesture = Gesture.Pan()
@@ -142,8 +167,8 @@ export default function WorkerHome() {
         )}
       </View>
 
-      {/* New Job Alert Modal overlay mock */}
-      {hasNewJob && (
+      {/* New Job Alert Modal overlay */}
+      {incomingJob && (
         <View style={styles.newJobOverlay}>
           <View style={styles.newJobCard}>
             <View style={styles.jobHeader}>
@@ -153,12 +178,12 @@ export default function WorkerHome() {
             
             <View style={styles.jobInfoRow}>
               <Ionicons name="location" size={20} color="#E74C3C" />
-              <Text style={styles.jobInfoText}>Cách bạn: <Text style={{fontWeight: 'bold'}}>2.5 km</Text></Text>
+              <Text style={styles.jobInfoText}>Địa chỉ: <Text style={{fontWeight: 'bold'}}>{incomingJob.address || 'Gần bạn'}</Text></Text>
             </View>
             
             <View style={styles.jobInfoRow}>
               <Ionicons name="construct" size={20} color="#0066CC" />
-              <Text style={styles.jobInfoText}>Sửa tủ lạnh không đông đá</Text>
+              <Text style={styles.jobInfoText}>{incomingJob.description}</Text>
             </View>
             
             <View style={styles.mediaPreview}>
@@ -181,8 +206,8 @@ export default function WorkerHome() {
               </GestureDetector>
             </View>
 
-            <TouchableOpacity style={styles.rejectBtn} onPress={() => setHasNewJob(false)}>
-              <Text style={styles.rejectBtnText}>Bỏ qua</Text>
+            <TouchableOpacity style={styles.rejectBtn} onPress={handleRejectJob}>
+              <Text style={styles.rejectBtnText}>Từ chối</Text>
             </TouchableOpacity>
           </View>
         </View>

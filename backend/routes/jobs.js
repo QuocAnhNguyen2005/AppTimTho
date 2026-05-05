@@ -249,4 +249,32 @@ router.post('/:job_id/review', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/jobs/:job_id
+ * Lấy thông tin chi tiết một đơn hàng (Dùng cho Polling ở Mobile)
+ */
+router.get('/:job_id', async (req, res) => {
+  try {
+    const { job_id } = req.params;
+    const queryText = `
+      SELECT 
+        j.id, j.status, j.total_price, j.created_at,
+        w.id as worker_id, w.full_name as worker_name, w.phone_number as worker_phone
+      FROM jobs j
+      LEFT JOIN workers w ON j.worker_id = w.id
+      WHERE j.id = $1
+    `;
+    const result = await db.query(queryText, [job_id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Không tìm thấy đơn hàng' });
+    }
+
+    res.status(200).json({ job: result.rows[0] });
+  } catch (error) {
+    console.error('Lỗi khi lấy thông tin đơn hàng:', error);
+    res.status(500).json({ error: 'Lỗi server nội bộ', details: error.message });
+  }
+});
+
 module.exports = router;

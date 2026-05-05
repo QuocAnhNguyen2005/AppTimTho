@@ -12,25 +12,41 @@ const SPECIALTIES = [
 ];
 
 export default function WorkerAuth({ onBack }: { onBack: () => void }) {
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
   // Form Data
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string[]>([]);
   const [kycUploaded, setKycUploaded] = useState(false);
 
   const totalSteps = 4;
 
+  const handleLogin = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      login('worker');
+    }, 1500);
+  };
+
+  const handleSocialLogin = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      login('worker');
+    }, 1000);
+  };
+
   const handleNextStep = () => {
-    if (step === 1 && (!email || !password)) return Alert.alert('Lỗi', 'Vui lòng nhập Email và Mật khẩu');
-    if (step === 2 && (!fullName || !phone)) return Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ Họ tên và Số điện thoại');
+    if (step === 1 && (!phone || !password)) return Alert.alert('Lỗi', 'Vui lòng nhập Số điện thoại và Mật khẩu');
+    if (step === 2 && !fullName) return Alert.alert('Lỗi', 'Vui lòng nhập Họ và tên');
     if (step === 3 && selectedSpecialty.length === 0) return Alert.alert('Lỗi', 'Vui lòng chọn ít nhất một chuyên môn');
     
     if (step < totalSteps) {
@@ -44,7 +60,6 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
     if (!kycUploaded) return Alert.alert('Lỗi', 'Vui lòng tải lên tài liệu xác thực (CCCD/Bằng cấp)');
     
     setIsLoading(true);
-    // Giả lập lưu vào DB (Supabase) và sync sang Admin (status: pending)
     setTimeout(() => {
       setIsLoading(false);
       Alert.alert(
@@ -74,19 +89,16 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
     </View>
   );
 
-  const renderStep1 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Tạo tài khoản</Text>
-      
+  const renderLogin = () => (
+    <View style={styles.form}>
       <View style={styles.inputContainer}>
-        <Ionicons name="mail-outline" size={20} color="#666" style={styles.icon} />
+        <Ionicons name="call-outline" size={20} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
+          placeholder="Số điện thoại"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
         />
       </View>
 
@@ -103,24 +115,85 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
           <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />
         </TouchableOpacity>
       </View>
-      
+
+      <TouchableOpacity style={styles.forgotPassword}>
+        <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={styles.primaryButton} 
+        onPress={handleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Đăng nhập</Text>
+        )}
+      </TouchableOpacity>
+
       <View style={styles.dividerContainer}>
         <View style={styles.divider} />
-        <Text style={styles.dividerText}>Hoặc</Text>
+        <Text style={styles.dividerText}>Hoặc đăng nhập nhanh bằng</Text>
         <View style={styles.divider} />
       </View>
 
-      <TouchableOpacity style={styles.socialButton}>
+      <TouchableOpacity style={styles.socialButton} onPress={handleSocialLogin}>
         <Ionicons name="logo-google" size={24} color="#DB4437" />
-        <Text style={styles.socialButtonText}>Đăng ký bằng Google</Text>
+        <Text style={styles.socialButtonText}>Tiếp tục với Google</Text>
       </TouchableOpacity>
+      
+      <TouchableOpacity style={[styles.socialButton, { marginTop: 12 }]} onPress={handleSocialLogin}>
+        <View style={styles.zaloIconMock}>
+          <Text style={styles.zaloIconText}>Zalo</Text>
+        </View>
+        <Text style={styles.socialButtonText}>Tiếp tục với Zalo</Text>
+      </TouchableOpacity>
+
+      <View style={styles.switchModeContainer}>
+        <Text style={styles.switchModeText}>Chưa có tài khoản?</Text>
+        <TouchableOpacity onPress={() => { setMode('register'); setStep(1); }}>
+          <Text style={styles.switchModeAction}>Đăng ký ngay</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderStep1 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Tạo tài khoản</Text>
+      
+      <View style={styles.inputContainer}>
+        <Ionicons name="call-outline" size={20} color="#666" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Số điện thoại"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Mật khẩu"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>Thông tin cơ bản</Text>
-      <Text style={styles.stepDesc}>Vui lòng nhập thông tin thật để khách hàng tin tưởng.</Text>
+      <Text style={styles.stepDesc}>Vui lòng nhập tên thật để khách hàng tin tưởng.</Text>
 
       <View style={styles.inputContainer}>
         <Ionicons name="person-outline" size={20} color="#666" style={styles.icon} />
@@ -129,17 +202,6 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
           placeholder="Họ và Tên"
           value={fullName}
           onChangeText={setFullName}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Ionicons name="call-outline" size={20} color="#666" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Số điện thoại liên hệ"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
         />
       </View>
     </View>
@@ -190,32 +252,53 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={step === 1 ? onBack : () => setStep(step - 1)}>
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => {
+          if (mode === 'login') onBack();
+          else if (step === 1) setMode('login');
+          else setStep(step - 1);
+        }}
+      >
         <Ionicons name="arrow-back" size={28} color="#fff" />
       </TouchableOpacity>
       
-      <Text style={styles.title}>Đăng ký Thợ</Text>
-      {renderProgressBar()}
+      <Text style={styles.title}>{mode === 'login' ? 'Đăng nhập Thợ' : 'Đăng ký Thợ'}</Text>
+      
+      {mode === 'register' && renderProgressBar()}
 
       <ScrollView style={styles.formScrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.form}>
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
-          {step === 4 && renderStep4()}
+        {mode === 'login' ? (
+          renderLogin()
+        ) : (
+          <View style={styles.form}>
+            {step === 1 && renderStep1()}
+            {step === 2 && renderStep2()}
+            {step === 3 && renderStep3()}
+            {step === 4 && renderStep4()}
 
-          <TouchableOpacity 
-            style={styles.primaryButton} 
-            onPress={handleNextStep}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>{step === totalSteps ? "Hoàn tất đăng ký" : "Tiếp tục"}</Text>
+            <TouchableOpacity 
+              style={styles.primaryButton} 
+              onPress={handleNextStep}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>{step === totalSteps ? "Hoàn tất đăng ký" : "Tiếp tục"}</Text>
+              )}
+            </TouchableOpacity>
+
+            {step === 1 && (
+              <View style={styles.switchModeContainer}>
+                <Text style={styles.switchModeText}>Đã có tài khoản?</Text>
+                <TouchableOpacity onPress={() => setMode('login')}>
+                  <Text style={styles.switchModeAction}>Đăng nhập</Text>
+                </TouchableOpacity>
+              </View>
             )}
-          </TouchableOpacity>
-        </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -308,6 +391,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 16,
+  },
+  forgotPasswordText: {
+    color: '#E67E22',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   primaryButton: {
     backgroundColor: '#E67E22',
     height: 56,
@@ -351,6 +443,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginLeft: 12,
+  },
+  zaloIconMock: {
+    backgroundColor: '#0068FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  zaloIconText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  switchModeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  switchModeText: {
+    color: '#666',
+    fontSize: 15,
+  },
+  switchModeAction: {
+    color: '#E67E22',
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 6,
   },
   tagsContainer: {
     flexDirection: 'row',

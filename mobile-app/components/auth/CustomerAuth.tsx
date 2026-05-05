@@ -4,13 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 
 export default function CustomerAuth({ onBack }: { onBack: () => void }) {
-  const [email, setEmail] = useState('');
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleRegister = async () => {
+  const handleAction = async () => {
     setIsLoading(true);
     // Giả lập kết nối Supabase
     setTimeout(() => {
@@ -33,19 +34,20 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
         <Ionicons name="arrow-back" size={28} color="#fff" />
       </TouchableOpacity>
       
-      <Text style={styles.title}>Đăng nhập / Đăng ký</Text>
-      <Text style={styles.subtitle}>Không cần nhập nhiều, tìm thợ ngay!</Text>
+      <Text style={styles.title}>{mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</Text>
+      <Text style={styles.subtitle}>
+        {mode === 'login' ? 'Chào mừng bạn quay lại!' : 'Không cần nhập nhiều, tìm thợ ngay!'}
+      </Text>
 
       <View style={styles.form}>
         <View style={styles.inputContainer}>
-          <Ionicons name="mail-outline" size={20} color="#666" style={styles.icon} />
+          <Ionicons name="call-outline" size={20} color="#666" style={styles.icon} />
           <TextInput
             style={styles.input}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
+            placeholder="Số điện thoại"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={setPhone}
           />
         </View>
 
@@ -63,33 +65,56 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
           </TouchableOpacity>
         </View>
 
+        {mode === 'login' && (
+          <TouchableOpacity style={styles.forgotPassword}>
+            <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity 
           style={styles.primaryButton} 
-          onPress={handleRegister}
+          onPress={handleAction}
           disabled={isLoading}
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Tiếp tục</Text>
+            <Text style={styles.buttonText}>{mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</Text>
           )}
         </TouchableOpacity>
 
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>Hoặc đăng nhập nhanh bằng</Text>
-          <View style={styles.divider} />
-        </View>
+        {mode === 'login' && (
+          <>
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>Hoặc đăng nhập nhanh bằng</Text>
+              <View style={styles.divider} />
+            </View>
 
-        <TouchableOpacity style={styles.socialButton} onPress={handleSocialLogin}>
-          <Ionicons name="logo-google" size={24} color="#DB4437" />
-          <Text style={styles.socialButtonText}>Tiếp tục với Google</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.socialButton, { marginTop: 12 }]} onPress={handleSocialLogin}>
-          <Ionicons name="logo-apple" size={24} color="#000" />
-          <Text style={styles.socialButtonText}>Tiếp tục với Apple</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.socialButton} onPress={handleSocialLogin}>
+              <Ionicons name="logo-google" size={24} color="#DB4437" />
+              <Text style={styles.socialButtonText}>Tiếp tục với Google</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.socialButton, { marginTop: 12 }]} onPress={handleSocialLogin}>
+              <View style={styles.zaloIconMock}>
+                <Text style={styles.zaloIconText}>Zalo</Text>
+              </View>
+              <Text style={styles.socialButtonText}>Tiếp tục với Zalo</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        <View style={styles.switchModeContainer}>
+          <Text style={styles.switchModeText}>
+            {mode === 'login' ? 'Chưa có tài khoản?' : 'Đã có tài khoản?'}
+          </Text>
+          <TouchableOpacity onPress={() => setMode(mode === 'login' ? 'register' : 'login')}>
+            <Text style={styles.switchModeAction}>
+              {mode === 'login' ? 'Đăng ký ngay' : 'Đăng nhập'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -149,6 +174,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 16,
+  },
+  forgotPasswordText: {
+    color: '#0066CC',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   primaryButton: {
     backgroundColor: '#0066CC',
     height: 56,
@@ -192,5 +226,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginLeft: 12,
+  },
+  zaloIconMock: {
+    backgroundColor: '#0068FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  zaloIconText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  switchModeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  switchModeText: {
+    color: '#666',
+    fontSize: 15,
+  },
+  switchModeAction: {
+    color: '#0066CC',
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 6,
   },
 });

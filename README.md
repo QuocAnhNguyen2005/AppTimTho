@@ -1,6 +1,6 @@
 # 🔧 AppTimTho — Nền tảng kết nối thợ sửa chữa
 
-> Hệ thống full-stack kết nối **Khách hàng** (người có nhu cầu sửa chữa) với **Thợ sửa chữa** (đối tác), vận hành theo mô hình hoa hồng **15,5%** trên mỗi giao dịch.
+> Hệ thống full-stack kết nối **Khách hàng** (người có nhu cầu sửa chữa) với **Thợ sửa chữa** (đối tác), vận hành theo mô hình hoa hồng **15,5%** trên mỗi giao dịch. Hệ thống được đồng bộ dữ liệu xuyên suốt giữa Mobile App, Web Client và Dashboard Admin qua REST API và tối ưu hiệu năng cao.
 
 ---
 
@@ -244,41 +244,46 @@ CLOUDINARY_API_SECRET=
 
 ---
 
-## 📱 Công nghệ sử dụng
+## 📱 Công nghệ & Công cụ sử dụng
 
-| Layer | Công nghệ |
-|-------|----------|
-| **Backend API** | Node.js, Express.js v5, PostgreSQL, pg (node-postgres) |
-| **Web Admin** | React 19, Vite 8, React Router v7, Lucide React |
-| **Web Client** | Next.js 16 (App Router), TailwindCSS v4 |
-| **Mobile App** | Expo SDK, React Native, Expo Router |
-| **Database** | PostgreSQL 15+ |
+| Layer | Công nghệ & Thư viện | Vai trò / Lý do sử dụng |
+|-------|----------|----------|
+| **Backend API** | Node.js, Express.js, pg (node-postgres) | API Server chính, xử lý logic RESTful, xác thực, luồng booking. |
+| **Web Admin** | React 19, Vite, TailwindCSS | Dashboard quản trị nhanh, nhẹ. Dùng Canvas/SVG cho biểu đồ, xuất file Excel quản lý tài chính. |
+| **Web Client** | Next.js (App Router), TailwindCSS | Cổng thông tin tối ưu SEO, SSR cho Khách và Thợ. |
+| **Mobile App** | Expo React Native, Expo Router | Ứng dụng di động đa nền tảng. Sử dụng **FlashList**, **Reanimated**, **expo-image** tối ưu hiệu năng UI. |
+| **Database** | PostgreSQL 15+ | Cơ sở dữ liệu quan hệ chính lưu trữ mọi thông tin toàn vẹn. |
+| **Realtime / Chat** | Supabase Realtime | Được dùng riêng biệt cho tính năng in-app chat cực kỳ mượt mà. (Booking dùng Short-polling từ Backend). |
 
 ---
 
 ## 📋 Trạng thái tính năng (Feature Status)
 
-### ✅ Đã hoàn thiện (UI/UX)
+### ✅ Đã hoàn thiện
 
-- [x] Trang chủ web-client với đầy đủ sections
-- [x] Trang đăng nhập (UI hoàn chỉnh)
-- [x] Luồng đăng ký: chọn vai trò → form Khách hàng / form Thợ
-- [x] Dashboard Admin (Light/Dark mode)
-- [x] Cấu trúc Database hoàn chỉnh (8 bảng)
-- [x] Cấu trúc Mobile App khung ban đầu (Expo Router)
+#### 1. Hệ thống Khách hàng & Thợ (Web/Mobile)
+- [x] **Đồng bộ hóa toàn diện**: Đăng nhập/Đăng ký phân quyền, đồng bộ trạng thái Auth và dữ liệu giữa Web Client, Mobile App và Backend.
+- [x] **Mobile App Tối ưu hiệu năng**: Cấu trúc kiến trúc Expo Router (tách biệt services/types/utils). Tối ưu hóa UI/UX cực cao bằng **FlashList**, **Reanimated**, **expo-image**, Bottom Sheets, Haptic feedback, Deep linking.
+- [x] **In-app Chat**: Nhắn tin trực tiếp giữa Khách và Thợ sử dụng Supabase Realtime.
+- [x] **Luồng đặt thợ (Booking Lifecycle)**: Chấp nhận, từ chối, hoàn thành đơn. Trạng thái cập nhật thời gian thực bằng Short-polling tối ưu.
+- [x] **Ví tiền & Doanh thu Thợ**: Theo dõi doanh thu (Dual-wallet: Cash/Credit), tính toán tự động hoa hồng (15.5% hệ thống, 84.5% Thợ). Giao diện Wallet bằng SVG Charts.
+- [x] **Xác minh danh tính (eKYC)**: Luồng gửi tài liệu chứng chỉ, CCCD từ phía Thợ để Admin duyệt trước khi hoạt động.
+
+#### 2. Hệ thống Quản trị (Web Admin)
+- [x] **Admin Dashboard Tổng quan**: Biểu đồ Canvas thống kê doanh thu, người dùng, hệ thống tracking.
+- [x] **CRM Quản lý Khách hàng & Thợ**: Panel chi tiết nâng cao (Customer Detail Panel), theo dõi log, lịch sử chat, các cờ lừa đảo (fraud signals).
+- [x] **Quyền lực Admin (Power Actions)**: Hỗ trợ ép buộc hoàn tiền (forced refunds), khóa/mở/ban tài khoản vi phạm.
+- [x] **Duyệt hồ sơ eKYC**: Giao diện duyệt xác minh danh tính và chứng chỉ Thợ.
+- [x] **Quản lý Dịch vụ**: Cấu hình bảng giá, danh mục (categories), tỷ lệ hoa hồng linh hoạt.
+- [x] **Tài chính & Rút tiền**: Xử lý duyệt yêu cầu rút tiền của Thợ, tự động tổng hợp báo cáo và xuất ra file Excel.
 
 ### 🔨 Cần tích hợp thêm (TODO)
 
-- [x] **API đăng nhập/đăng ký**: Kết nối form web với backend `POST /api/auth` (đã hoàn thiện cùng password hashing)
-- [ ] **OAuth**: Tích hợp đăng nhập Google, Zalo, Facebook
-- [ ] **OTP SMS/Zalo**: Xác thực số điện thoại khi đăng ký
-- [ ] **Upload ảnh**: CCCD, avatar Thợ → Cloudinary hoặc AWS S3
-- [ ] **Luồng đặt thợ (Booking)**: Khách tìm, chọn, đặt thợ
-- [ ] **Thanh toán thực**: Tích hợp cổng thanh toán (VNPay/MoMo/ZaloPay)
-- [ ] **Chuyển tiền tự động**: Hệ thống tự trích 15,5% và chuyển 84,5% cho Thợ
-- [ ] **Real-time**: WebSocket để Thợ nhận đơn ngay lập tức
-- [ ] **Admin duyệt Thợ**: Quy trình duyệt hồ sơ trong web-admin
-- [ ] **Bản đồ**: Google Maps API cho vị trí Thợ và Khách
+- [ ] **OAuth**: Tích hợp đăng nhập nhanh Google, Zalo, Facebook.
+- [ ] **OTP SMS/Zalo**: Xác thực số điện thoại thực khi đăng ký để chống spam.
+- [ ] **Thanh toán trực tuyến**: Tích hợp cổng thanh toán (VNPay/MoMo/ZaloPay) cho khách hàng nạp Credit.
+- [ ] **Bản đồ trực tiếp**: Tích hợp Google Maps API / React Native Maps theo dõi vị trí Thợ di chuyển.
+- [ ] **Upload ảnh**: Tích hợp Cloudinary hoặc AWS S3 hoàn thiện thay thế upload local.
 
 ---
 

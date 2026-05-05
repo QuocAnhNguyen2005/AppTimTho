@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from './context/AuthContext';
-import * as LocalAuthentication from 'expo-local-authentication';
+import { useAuth } from '../context/AuthContext';
+// import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
@@ -29,21 +29,22 @@ export default function LoginScreen() {
 
   const handleBiometricAuth = async () => {
     try {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      // const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      // const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
-      if (hasHardware && isEnrolled) {
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: 'Đăng nhập bằng FaceID / Vân tay',
-          fallbackLabel: 'Sử dụng mật khẩu',
-        });
+      // if (hasHardware && isEnrolled) {
+      //   const result = await LocalAuthentication.authenticateAsync({
+      //     promptMessage: 'Đăng nhập bằng FaceID / Vân tay',
+      //     fallbackLabel: 'Sử dụng mật khẩu',
+      //   });
 
-        if (result.success) {
-          router.push('/role-selection');
-        }
-      } else {
-        alert('Thiết bị không hỗ trợ hoặc chưa cài đặt sinh trắc học.');
-      }
+      //   if (result.success) {
+      //     router.push('/role-selection');
+      //   }
+      // } else {
+      //   alert('Thiết bị không hỗ trợ hoặc chưa cài đặt sinh trắc học.');
+      // }
+      alert('Chức năng Sinh trắc học đang được phát triển.');
     } catch (error) {
       console.log('Biometric auth error', error);
       alert('Lỗi xác thực sinh trắc học');

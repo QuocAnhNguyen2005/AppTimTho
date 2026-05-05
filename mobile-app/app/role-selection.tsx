@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function RoleSelectionScreen() {
   const router = useRouter();

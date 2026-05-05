@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Switch, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Switch, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -10,26 +13,73 @@ export default function WorkerHome() {
   const [isOnline, setIsOnline] = useState(false);
   const [hasNewJob, setHasNewJob] = useState(false);
 
+  const translateX = useSharedValue(0);
+  const swipeLimit = width - 48 - 60; // card width minus padding and button size
+
+  const pulseScale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(0.5);
+
   // Mock receiving a job when online
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isOnline) {
       timer = setTimeout(() => {
         setHasNewJob(true);
+        // Reset swipe
+        translateX.value = 0;
       }, 5000); // 5 seconds after going online
     } else {
       setHasNewJob(false);
     }
+    
+    if (isOnline) {
+      pulseScale.value = withRepeat(withTiming(2, { duration: 1500, easing: Easing.out(Easing.ease) }), -1, false);
+      pulseOpacity.value = withRepeat(withTiming(0, { duration: 1500, easing: Easing.out(Easing.ease) }), -1, false);
+    } else {
+      pulseScale.value = 1;
+      pulseOpacity.value = 0.5;
+    }
+    
     return () => clearTimeout(timer);
   }, [isOnline]);
 
   const handleAcceptJob = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setHasNewJob(false);
     router.push('/(worker)/job-detail');
   };
 
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      if (e.translationX >= 0 && e.translationX <= swipeLimit) {
+        translateX.value = e.translationX;
+      }
+    })
+    .onEnd((e) => {
+      if (translateX.value > swipeLimit * 0.7) {
+        translateX.value = withSpring(swipeLimit);
+        runOnJS(handleAcceptJob)();
+      } else {
+        translateX.value = withSpring(0);
+      }
+    });
+
+  const animatedSwipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const animatedPulseStyle1 = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: pulseOpacity.value,
+  }));
+  const animatedPulseStyle2 = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value * 1.5 }],
+    opacity: pulseOpacity.value * 0.5,
+  }));
+
   return (
-    <SafeAreaView style={styles.container}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
       {/* Header Info */}
       <View style={styles.header}>
         <View>
@@ -48,7 +98,10 @@ export default function WorkerHome() {
           trackColor={{ false: '#ccc', true: '#E67E22' }}
           thumbColor={isOnline ? '#fff' : '#f4f3f4'}
           ios_backgroundColor="#ccc"
-          onValueChange={() => setIsOnline(!isOnline)}
+          onValueChange={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setIsOnline(!isOnline);
+          }}
           value={isOnline}
           style={{ transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }] }}
         />
@@ -81,8 +134,8 @@ export default function WorkerHome() {
           </View>
         ) : (
           <View style={styles.onlineBox}>
-            <View style={[styles.radarCircle, { width: 200, height: 200, borderRadius: 100 }]} />
-            <View style={[styles.radarCircle, { width: 100, height: 100, borderRadius: 50, position: 'absolute' }]} />
+            <Animated.View style={[styles.radarCircle, { width: 100, height: 100, borderRadius: 50 }, animatedPulseStyle1]} />
+            <Animated.View style={[styles.radarCircle, { width: 100, height: 100, borderRadius: 50, position: 'absolute' }, animatedPulseStyle2]} />
             <Ionicons name="location" size={40} color="#E67E22" style={{ position: 'absolute' }} />
             <Text style={styles.onlineText}>Đang chờ đơn mới xung quanh bạn...</Text>
           </View>
@@ -118,14 +171,15 @@ export default function WorkerHome() {
               <Text style={styles.feeValue}>50.000đ</Text>
             </View>
 
-            {/* Swipe to accept simulation */}
-            <TouchableOpacity 
-              style={styles.acceptBtn}
-              onPress={handleAcceptJob}
-            >
-              <Text style={styles.acceptBtnText}>NHẬN ĐƠN NGAY</Text>
-              <Ionicons name="arrow-forward-circle" size={28} color="#fff" style={{ position: 'absolute', right: 16 }} />
-            </TouchableOpacity>
+            {/* Swipe to accept with Reanimated */}
+            <View style={styles.swipeContainer}>
+              <Text style={styles.swipeText}>Vuốt để nhận đơn</Text>
+              <GestureDetector gesture={panGesture}>
+                <Animated.View style={[styles.swipeThumb, animatedSwipeStyle]}>
+                  <Ionicons name="arrow-forward" size={24} color="#fff" />
+                </Animated.View>
+              </GestureDetector>
+            </View>
 
             <TouchableOpacity style={styles.rejectBtn} onPress={() => setHasNewJob(false)}>
               <Text style={styles.rejectBtnText}>Bỏ qua</Text>
@@ -133,7 +187,8 @@ export default function WorkerHome() {
           </View>
         </View>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
@@ -169,6 +224,9 @@ const styles = StyleSheet.create({
   feeValue: { fontSize: 20, fontWeight: 'bold', color: '#E67E22' },
   acceptBtn: { backgroundColor: '#27AE60', height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', shadowColor: '#27AE60', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.4, shadowRadius: 10, elevation: 5, marginBottom: 16 },
   acceptBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  swipeContainer: { backgroundColor: '#E8F5E9', height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
+  swipeText: { color: '#27AE60', fontSize: 16, fontWeight: 'bold' },
+  swipeThumb: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#27AE60', justifyContent: 'center', alignItems: 'center', position: 'absolute', left: 4 },
   rejectBtn: { alignItems: 'center', padding: 12 },
   rejectBtnText: { color: '#999', fontSize: 16, fontWeight: '600' }
 });

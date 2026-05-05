@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function WalletScreen() {
@@ -15,53 +15,58 @@ export default function WalletScreen() {
         <Text style={styles.headerTitle}>Ví Tín Dụng</Text>
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Balance Card */}
-        <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Số dư khả dụng</Text>
-          <Text style={styles.balanceAmount}>500.000 đ</Text>
-          <Text style={styles.balanceNote}>
-            * Hệ thống tự động trừ 15.5% hoa hồng trên mỗi đơn hoàn thành. Vui lòng duy trì số dư lớn hơn 0 để nhận đơn mới.
-          </Text>
-        </View>
-
-        {/* Topup Instructions */}
-        <View style={styles.topupSection}>
-          <Text style={styles.sectionTitle}>Hướng dẫn nạp tiền</Text>
-          <View style={styles.bankCard}>
-            <View style={styles.bankRow}>
-              <Text style={styles.bankLabel}>Ngân hàng:</Text>
-              <Text style={styles.bankValue}>Vietcombank</Text>
-            </View>
-            <View style={styles.bankRow}>
-              <Text style={styles.bankLabel}>Số tài khoản:</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={styles.bankValue}>0123456789</Text>
-                <TouchableOpacity style={{ marginLeft: 8 }}>
-                  <Ionicons name="copy-outline" size={16} color="#0066CC" />
-                </TouchableOpacity>
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={transactions}
+          contentContainerStyle={styles.content}
+          ListHeaderComponent={
+            <>
+              {/* Balance Card */}
+              <View style={styles.balanceCard}>
+                <Text style={styles.balanceLabel}>Số dư khả dụng</Text>
+                <Text style={styles.balanceAmount}>500.000 đ</Text>
+                <Text style={styles.balanceNote}>
+                  * Hệ thống tự động trừ 15.5% hoa hồng trên mỗi đơn hoàn thành. Vui lòng duy trì số dư lớn hơn 0 để nhận đơn mới.
+                </Text>
               </View>
-            </View>
-            <View style={styles.bankRow}>
-              <Text style={styles.bankLabel}>Chủ tài khoản:</Text>
-              <Text style={styles.bankValue}>CTY APP TIM THO</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.bankRow}>
-              <Text style={styles.bankLabel}>Nội dung CK:</Text>
-              <View style={styles.syntaxBox}>
-                <Text style={styles.syntaxText}>NAP U001</Text>
-              </View>
-            </View>
-            <Text style={styles.bankNote}>(Tiền sẽ tự động cập nhật vào ví trong 1-3 phút)</Text>
-          </View>
-        </View>
 
-        {/* Transaction History */}
-        <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>Lịch sử giao dịch</Text>
-          {transactions.map((tx) => (
-            <View key={tx.id} style={styles.txItem}>
+              {/* Topup Instructions */}
+              <View style={styles.topupSection}>
+                <Text style={styles.sectionTitle}>Hướng dẫn nạp tiền</Text>
+                <View style={styles.bankCard}>
+                  <View style={styles.bankRow}>
+                    <Text style={styles.bankLabel}>Ngân hàng:</Text>
+                    <Text style={styles.bankValue}>Vietcombank</Text>
+                  </View>
+                  <View style={styles.bankRow}>
+                    <Text style={styles.bankLabel}>Số tài khoản:</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text style={styles.bankValue}>0123456789</Text>
+                      <TouchableOpacity style={{ marginLeft: 8 }}>
+                        <Ionicons name="copy-outline" size={16} color="#0066CC" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={styles.bankRow}>
+                    <Text style={styles.bankLabel}>Chủ tài khoản:</Text>
+                    <Text style={styles.bankValue}>CTY APP TIM THO</Text>
+                  </View>
+                  <View style={styles.divider} />
+                  <View style={styles.bankRow}>
+                    <Text style={styles.bankLabel}>Nội dung CK:</Text>
+                    <View style={styles.syntaxBox}>
+                      <Text style={styles.syntaxText}>NAP U001</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.bankNote}>(Tiền sẽ tự động cập nhật vào ví trong 1-3 phút)</Text>
+                </View>
+              </View>
+
+              <Text style={styles.sectionTitle}>Lịch sử giao dịch</Text>
+            </>
+          }
+          renderItem={({ item: tx }) => (
+            <View style={styles.txItem}>
               <View style={styles.txIconBox}>
                 <Ionicons 
                   name={tx.type === 'topup' ? 'arrow-down' : 'arrow-up'} 
@@ -77,11 +82,10 @@ export default function WalletScreen() {
                 {tx.amount}
               </Text>
             </View>
-          ))}
-        </View>
-        
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          )}
+          keyExtractor={(tx) => tx.id}
+        />
+      </View>
     </SafeAreaView>
   );
 }

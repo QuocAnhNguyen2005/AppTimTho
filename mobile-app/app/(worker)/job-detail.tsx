@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 export default function JobDetailScreen() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function JobDetailScreen() {
   };
 
   const handleNextStatus = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (status === 'moving') setStatus('arrived');
     else if (status === 'arrived') setStatus('checking');
     else if (status === 'checking') setStatus('fixing');
@@ -28,6 +31,7 @@ export default function JobDetailScreen() {
   };
 
   const handleTakePhoto = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setShowCamera(false);
     setPhotoTaken(true);
     setStatus('done');
@@ -50,9 +54,14 @@ export default function JobDetailScreen() {
               <Text style={styles.customerName}>Khách Hàng A</Text>
               <Text style={styles.customerPhone}>0901234567</Text>
             </View>
-            <TouchableOpacity style={styles.callBtn}>
-              <Ionicons name="call" size={20} color="#fff" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity style={[styles.callBtn, { backgroundColor: '#E8F1FA' }]} onPress={() => router.push('/chat')}>
+                <Ionicons name="chatbubble" size={20} color="#0066CC" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.callBtn}>
+                <Ionicons name="call" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
           
           <View style={styles.divider} />

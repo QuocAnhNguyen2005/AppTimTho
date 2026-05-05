@@ -5,9 +5,28 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider } from '../context/AuthContext';
+import * as QuickActions from 'expo-quick-actions';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+
+  useEffect(() => {
+    QuickActions.setItems([
+      { title: 'Gọi thợ Sửa Điện Lạnh', icon: 'snow', id: 'dien-lanh', params: { href: '/(customer)/booking' } },
+      { title: 'Gọi thợ Sửa Khoá', icon: 'key', id: 'sua-khoa', params: { href: '/(customer)/booking' } },
+    ]);
+
+    const subscription = QuickActions.addListener((action) => {
+      if (action.params?.href) {
+        router.push(action.params.href as any);
+      }
+    });
+
+    return () => subscription.remove();
+  }, [router]);
 
   return (
     <AuthProvider>

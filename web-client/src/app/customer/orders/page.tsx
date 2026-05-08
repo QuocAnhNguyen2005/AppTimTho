@@ -39,7 +39,7 @@ export default function CustomerOrdersPage() {
   const fetchOrders = async (userId: number) => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/jobs/customer/${userId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/jobs/customer/${userId}`);
       if (!res.ok) throw new Error('Không thể tải lịch sử đơn hàng');
       const data = await res.json();
       setOrders(data.jobs || []);
@@ -65,7 +65,7 @@ export default function CustomerOrdersPage() {
     if (!reviewJob) return;
     try {
       setReviewLoading(true);
-      const res = await fetch(`http://localhost:5000/api/jobs/${reviewJob.id}/review`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/jobs/${reviewJob.id}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rating, comment, customer_id: user.id }),

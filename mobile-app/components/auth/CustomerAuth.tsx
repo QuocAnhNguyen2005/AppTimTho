@@ -27,12 +27,12 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
       return Alert.alert('Đăng nhập thất bại', result.error);
     }
 
-    if (result.role !== 'customer') {
+    if (result.role !== 'customer' && result.role !== 'admin') {
       return Alert.alert(
         'Sai vai trò',
         result.role === 'worker'
           ? 'Tài khoản này là Thợ. Vui lòng đăng nhập ở phần "Tôi là Thợ".'
-          : 'Tài khoản Admin không thể đăng nhập tại đây.'
+          : 'Sai vai trò đăng nhập.'
       );
     }
 

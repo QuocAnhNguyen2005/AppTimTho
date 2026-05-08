@@ -55,7 +55,7 @@ export default function WorkerOrdersPage() {
       if (!isLoadMore) setLoading(true);
       setError('');
       // Simulate API pagination: In a real app we pass ?page=${pageNum}&limit=10
-      const res = await fetch(`http://localhost:5000/api/jobs/worker/${workerId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/jobs/worker/${workerId}`);
       if (!res.ok) throw new Error('Không thể tải lịch sử đơn hàng');
       const data = await res.json();
       

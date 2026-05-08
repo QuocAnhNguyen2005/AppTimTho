@@ -41,12 +41,12 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
       return Alert.alert('Đăng nhập thất bại', result.error);
     }
 
-    if (result.role !== 'worker') {
+    if (result.role !== 'worker' && result.role !== 'admin') {
       return Alert.alert(
         'Sai vai trò',
         result.role === 'customer'
           ? 'Tài khoản này là Khách hàng. Vui lòng đăng nhập ở phần "Tôi muốn Tìm Thợ".'
-          : 'Tài khoản Admin không thể đăng nhập tại đây.'
+          : 'Sai vai trò đăng nhập.'
       );
     }
 

@@ -90,8 +90,8 @@ export default function WorkerDashboard() {
     setLoading(true);
     try {
       const [jobsRes, statsRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/jobs/worker/${workerId}`),
-        fetch(`http://localhost:5000/api/workers/${workerId}/stats`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/jobs/worker/${workerId}`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/workers/${workerId}/stats`),
       ]);
       const jobsData = jobsRes.ok ? await jobsRes.json() : { jobs: [] };
       const statsData = statsRes.ok ? await statsRes.json() : null;
@@ -121,7 +121,7 @@ export default function WorkerDashboard() {
     // If accepted or complete, temporarily show "thành công" effect locally via state if needed, but optimistic state already changes the tab visually.
     
     try {
-      const res = await fetch(`http://localhost:5000/api/jobs/${jobId}/${action}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/jobs/${jobId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ worker_id: worker?.id }),

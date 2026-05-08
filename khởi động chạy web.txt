@@ -1,11 +1,47 @@
-khởi động chạy web 
-cd web-client
-npm run dev
+================================================================
+HƯỚNG DẪN KHỞI ĐỘNG AppTimTho
+================================================================
 
-khởi động backend 
-cd backend
-node index.js
+CÁCH NHANH NHẤT (Khởi động tất cả 1 lệnh):
+  Mở PowerShell tại thư mục gốc AppTimTho, chạy:
+  .\start-all.ps1
 
-khởi động tài khoản admin
-cd backend
-node seed.js
+================================================================
+HOẶC khởi động THỦ CÔNG (4 terminal riêng):
+
+[1] Backend (Port 5000):
+  cd backend
+  node index.js
+
+[2] Tạo tài khoản test (chỉ chạy 1 lần hoặc khi cần reset):
+  cd backend
+  node seed.js
+
+[3] Web-Client - Giao diện khách hàng & thợ (Port 3000):
+  cd web-client
+  npm run dev
+  -> Truy cập: http://localhost:3000
+
+[4] Web-Admin - Trang quản trị (Port 5173):
+  cd web-admin
+  npm run dev
+  -> Truy cập: http://localhost:5173
+
+[5] Mobile App:
+  cd mobile-app
+  npx expo start
+  -> Quét QR bằng Expo Go trên điện thoại (chung Wi-Fi với máy tính)
+
+================================================================
+TÀI KHOẢN TEST:
+  Admin  : admin       / 123456  (chỉ dùng cho Web-Admin)
+  Khách  : 0901234567  / 123456  (Web-Client & Mobile-App)
+  Thợ    : 0909876543  / 123456  (Web-Client & Mobile-App)
+
+================================================================
+LƯU Ý:
+  - Phải khởi động [1] Backend trước, sau đó mới chạy các client
+  - Mobile App tự động nhận IP của máy tính qua Expo
+  - Nếu đổi port Backend: chỉ cần sửa PORT trong backend/.env
+    và NEXT_PUBLIC_API_URL trong web-client/.env.local
+================================================================

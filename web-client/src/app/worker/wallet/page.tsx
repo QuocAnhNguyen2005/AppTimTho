@@ -66,8 +66,8 @@ export default function WorkerWalletPage() {
       setLoading(true);
       setError('');
       const [walletRes, txRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/workers/${workerId}/wallet`),
-        fetch(`http://localhost:5000/api/workers/${workerId}/transactions`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/workers/${workerId}/wallet`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/workers/${workerId}/transactions`),
       ]);
       if (walletRes.ok) {
         const data = await walletRes.json();

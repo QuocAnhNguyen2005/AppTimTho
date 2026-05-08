@@ -164,7 +164,7 @@ function SearchContent() {
       if (f.min_rating) params.set('min_rating', f.min_rating);
       params.set('limit', String(limit));
       params.set('offset', String((pageNum - 1) * limit));
-      const res = await fetch(`http://localhost:5000/api/workers/search?${params}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workers/search?${params}`);
       if (!res.ok) throw new Error('API error');
       const data = await res.json();
       let result: Worker[] = data.workers || [];

@@ -56,7 +56,7 @@ export default function WorkerReviewsPage() {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch(`http://localhost:5000/api/workers/${workerId}/reviews`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workers/${workerId}/reviews`);
       if (!res.ok) throw new Error('Không thể tải đánh giá');
       const data = await res.json();
       

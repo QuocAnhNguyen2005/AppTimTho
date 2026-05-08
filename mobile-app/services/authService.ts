@@ -1,11 +1,4 @@
-// API Service kết nối với Backend Express (PostgreSQL)
-// Backend đang chạy tại http://localhost:5000
-
-// Khi test trên thiết bị thật, thay 'localhost' bằng IP máy tính (vd: 192.168.1.x)
-// Khi test trên Emulator Android: dùng '10.0.2.2' thay cho 'localhost'
-const API_BASE_URL = 'http://10.0.2.2:5000/api'; // Android Emulator
-// const API_BASE_URL = 'http://localhost:5000/api'; // iOS Simulator / Web
-// const API_BASE_URL = 'http://192.168.x.x:5000/api'; // Thiết bị thật (thay IP)
+import { API_BASE_URL } from '../config/api';
 
 export interface LoginResult {
   success: boolean;

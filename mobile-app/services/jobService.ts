@@ -1,5 +1,4 @@
-const API_BASE_URL = 'http://10.0.2.2:5000/api'; // Android Emulator
-// const API_BASE_URL = 'http://localhost:5000/api'; // iOS Simulator / Web
+import { API_BASE_URL } from '../config/api';
 
 export interface Job {
   id: number;

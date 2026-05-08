@@ -159,4 +159,44 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// GET route để test trực tiếp (Debug)
+router.get('/test-login', async (req, res) => {
+  try {
+    const phone_number = req.query.phone || '0901234567';
+    const password = req.query.pass || '123456';
+
+    const debugInfo = { dbConnected: false, userFound: null, passwordMatch: false, error: null };
+
+    // Test simple query to DB
+    try {
+      const now = await db.query('SELECT NOW()');
+      debugInfo.dbConnected = !!now;
+    } catch (dbErr) {
+      debugInfo.error = 'DB Connection failed: ' + dbErr.message;
+      return res.status(500).json(debugInfo);
+    }
+
+    const userResult = await db.query('SELECT id, full_name, phone_number, password_hash, avatar_url FROM users WHERE phone_number = $1', [phone_number]);
+    if (userResult.rows.length > 0) {
+      const user = userResult.rows[0];
+      debugInfo.userFound = 'users table';
+      debugInfo.passwordMatch = await bcrypt.compare(password, user.password_hash);
+      return res.json(debugInfo);
+    }
+
+    const workerResult = await db.query('SELECT id, full_name, phone_number, password_hash, avatar_url, is_verified FROM workers WHERE phone_number = $1', [phone_number]);
+    if (workerResult.rows.length > 0) {
+      const worker = workerResult.rows[0];
+      debugInfo.userFound = 'workers table';
+      debugInfo.passwordMatch = await bcrypt.compare(password, worker.password_hash);
+      return res.json(debugInfo);
+    }
+
+    debugInfo.userFound = 'not found';
+    return res.json(debugInfo);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

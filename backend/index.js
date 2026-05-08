@@ -23,6 +23,6 @@ app.get('/', (req, res) => {
   res.send('API Tìm Thợ đang chạy...');
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Server đang chạy tại http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Server đang chạy tại http://0.0.0.0:${port}`);
 });

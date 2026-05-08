@@ -5,7 +5,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'expo-router';
 import { loginAPI, registerWorkerAPI } from '../../services/authService';
+import { API_BASE_URL } from '../../config/api';
 
 const SPECIALTIES = [
   { id: 'dien', label: 'Sửa Điện' },
@@ -19,6 +21,7 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const router = useRouter();
 
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -38,7 +41,10 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
     setIsLoading(false);
 
     if (!result.success) {
-      return Alert.alert('Đăng nhập thất bại', result.error);
+      return Alert.alert(
+        'Đăng nhập thất bại',
+        `${result.error}\n\n📡 Server: ${API_BASE_URL}\n\nHãy chắc chắn backend đang chạy và điện thoại cùng Wi-Fi với máy tính.`
+      );
     }
 
     if (result.role !== 'worker' && result.role !== 'admin') {
@@ -51,6 +57,7 @@ export default function WorkerAuth({ onBack }: { onBack: () => void }) {
     }
 
     login('worker', result.user);
+    router.replace('/(worker)/home');
   };
 
   const handleSocialLogin = () => {

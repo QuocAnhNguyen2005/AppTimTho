@@ -4,7 +4,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'expo-router';
 import { loginAPI, registerCustomerAPI } from '../../services/authService';
+import { API_BASE_URL } from '../../config/api';
 
 export default function CustomerAuth({ onBack }: { onBack: () => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -14,6 +16,7 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!phone || !password) {
@@ -24,7 +27,10 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
     setIsLoading(false);
 
     if (!result.success) {
-      return Alert.alert('Đăng nhập thất bại', result.error);
+      return Alert.alert(
+        'Đăng nhập thất bại',
+        `${result.error}\n\n📡 Đang kết nối đến:\n${API_BASE_URL}\n\nKiểm tra:\n• Backend đang chạy (node index.js)\n• Điện thoại & máy tính cùng Wi-Fi`
+      );
     }
 
     if (result.role !== 'customer' && result.role !== 'admin') {
@@ -37,6 +43,8 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
     }
 
     login('customer', result.user);
+    // Chuyển hướng sau khi đăng nhập thành công
+    router.replace('/(customer)/home');
   };
 
   const handleRegister = async () => {
@@ -58,11 +66,6 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
     Alert.alert('Đăng ký thành công!', 'Tài khoản đã được tạo. Hãy đăng nhập.', [
       { text: 'OK', onPress: () => { setMode('login'); setFullName(''); setPassword(''); } }
     ]);
-  };
-
-  const handleSocialLogin = () => {
-    // TODO: Tích hợp Google OAuth qua Supabase
-    Alert.alert('Sắp ra mắt', 'Tính năng đăng nhập nhanh đang được phát triển.');
   };
 
   return (
@@ -97,6 +100,7 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
+            autoCapitalize="none"
           />
         </View>
 
@@ -108,17 +112,12 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
+            autoCapitalize="none"
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#666" />
           </TouchableOpacity>
         </View>
-
-        {mode === 'login' && (
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
-          </TouchableOpacity>
-        )}
 
         <TouchableOpacity
           style={styles.primaryButton}
@@ -132,26 +131,14 @@ export default function CustomerAuth({ onBack }: { onBack: () => void }) {
           )}
         </TouchableOpacity>
 
-        {mode === 'login' && (
-          <>
-            <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>Hoặc đăng nhập nhanh bằng</Text>
-              <View style={styles.divider} />
-            </View>
-
-            <TouchableOpacity style={styles.socialButton} onPress={handleSocialLogin}>
-              <Ionicons name="logo-google" size={24} color="#DB4437" />
-              <Text style={styles.socialButtonText}>Tiếp tục với Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.socialButton, { marginTop: 12 }]} onPress={handleSocialLogin}>
-              <View style={styles.zaloIconMock}>
-                <Text style={styles.zaloIconText}>Zalo</Text>
-              </View>
-              <Text style={styles.socialButtonText}>Tiếp tục với Zalo</Text>
-            </TouchableOpacity>
-          </>
+        {/* Debug info - chỉ hiện khi __DEV__ */}
+        {__DEV__ && (
+          <TouchableOpacity
+            style={styles.debugButton}
+            onPress={() => Alert.alert('Debug Info', `API URL:\n${API_BASE_URL}`)}
+          >
+            <Text style={styles.debugText}>📡 Kiểm tra kết nối</Text>
+          </TouchableOpacity>
         )}
 
         <View style={styles.switchModeContainer}>
@@ -186,23 +173,16 @@ const styles = StyleSheet.create({
   },
   icon: { marginRight: 12 },
   input: { flex: 1, fontSize: 16, color: '#333' },
-  forgotPassword: { alignSelf: 'flex-end', marginBottom: 16 },
-  forgotPasswordText: { color: '#0066CC', fontSize: 14, fontWeight: '600' },
   primaryButton: {
     backgroundColor: '#0066CC', height: 56, borderRadius: 12,
     justifyContent: 'center', alignItems: 'center', marginTop: 8,
   },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
-  divider: { flex: 1, height: 1, backgroundColor: '#E0E0E0' },
-  dividerText: { marginHorizontal: 12, color: '#666', fontSize: 14 },
-  socialButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12, height: 56, backgroundColor: '#fff',
+  debugButton: {
+    marginTop: 12, paddingVertical: 8, alignItems: 'center',
+    backgroundColor: '#F0F0F0', borderRadius: 8,
   },
-  socialButtonText: { fontSize: 16, fontWeight: '600', color: '#333', marginLeft: 12 },
-  zaloIconMock: { backgroundColor: '#0068FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  zaloIconText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  debugText: { fontSize: 12, color: '#666' },
   switchModeContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
   switchModeText: { color: '#666', fontSize: 15 },
   switchModeAction: { color: '#0066CC', fontSize: 15, fontWeight: 'bold' },

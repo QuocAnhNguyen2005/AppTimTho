@@ -17,7 +17,7 @@ export default function Index() {
     return <Redirect href="/login" />;
   }
 
-  if (role === 'customer') {
+  if (role === 'customer' || role === 'admin') {
     return <Redirect href="/(customer)/home" />;
   } else if (role === 'worker') {
     return <Redirect href="/(worker)/home" />;
@@ -25,3 +25,4 @@ export default function Index() {
 
   return <Redirect href="/login" />;
 }
+

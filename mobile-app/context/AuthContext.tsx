@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
-type Role = 'customer' | 'worker' | null;
+// Thêm 'admin' vào type Role để tài khoản admin có thể đăng nhập
+type Role = 'customer' | 'worker' | 'admin' | null;
 
 interface UserInfo {
   id: number;
@@ -25,7 +26,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState<Role>(null);
   const [user, setUser] = useState<UserInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // isLoading = false ngay từ đầu (không cần restore session)
+  const [isLoading] = useState(false);
 
   const login = (selectedRole: Role, userInfo?: UserInfo) => {
     setIsAuthenticated(true);

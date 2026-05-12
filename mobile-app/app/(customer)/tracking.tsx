@@ -51,6 +51,43 @@ export default function TrackingScreen() {
     return () => clearInterval(intervalId);
   }, [jobId, status]);
 
+  const steps = [
+    { key: 'finding', label: 'Tìm thợ' },
+    { key: 'arriving', label: 'Thợ đang tới' },
+    { key: 'working', label: 'Đang sửa chữa' },
+    { key: 'reviewing_proof', label: 'Thanh toán' },
+  ];
+
+  const getCurrentStepIndex = () => {
+    if (status === 'finding') return 0;
+    if (status === 'accepted' || status === 'arriving') return 1;
+    if (status === 'working') return 2;
+    return 3;
+  };
+
+  const renderProgressBar = () => {
+    const activeIndex = getCurrentStepIndex();
+    return (
+      <View style={styles.progressContainer}>
+        {steps.map((step, index) => (
+          <View key={step.key} style={styles.stepWrapper}>
+            <View style={[styles.stepCircle, index <= activeIndex && styles.stepCircleActive]}>
+              {index < activeIndex ? (
+                <Ionicons name="checkmark" size={14} color="#fff" />
+              ) : (
+                <Text style={[styles.stepNumber, index <= activeIndex && styles.stepNumberActive]}>{index + 1}</Text>
+              )}
+            </View>
+            <Text style={[styles.stepLabel, index <= activeIndex && styles.stepLabelActive]}>{step.label}</Text>
+            {index < steps.length - 1 && (
+              <View style={[styles.stepLine, index < activeIndex && styles.stepLineActive]} />
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   const renderContent = () => {
     if (status === 'finding') {
       return (
@@ -153,6 +190,8 @@ export default function TrackingScreen() {
         <Text style={styles.headerTitle}>Theo dõi tiến độ</Text>
       </View>
 
+      {renderProgressBar()}
+
       {renderContent()}
 
       {/* Review Modal */}
@@ -231,5 +270,15 @@ const styles = StyleSheet.create({
   proofTitle: { fontSize: 15, fontWeight: 'bold', marginBottom: 12, color: '#333' },
   proofImageMock: { height: 150, backgroundColor: '#F5F5F5', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   confirmProofBtn: { backgroundColor: '#4CAF50', padding: 16, borderRadius: 12, alignItems: 'center' },
-  confirmProofBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+  confirmProofBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  progressContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  stepWrapper: { alignItems: 'center', flex: 1, position: 'relative' },
+  stepCircle: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#E0E0E0', justifyContent: 'center', alignItems: 'center', zIndex: 2 },
+  stepCircleActive: { backgroundColor: '#0066CC' },
+  stepNumber: { fontSize: 12, color: '#666', fontWeight: 'bold' },
+  stepNumberActive: { color: '#fff' },
+  stepLabel: { fontSize: 10, color: '#999', marginTop: 8, textAlign: 'center' },
+  stepLabelActive: { color: '#0066CC', fontWeight: 'bold' },
+  stepLine: { position: 'absolute', top: 11, left: '50%', width: '100%', height: 2, backgroundColor: '#E0E0E0', zIndex: 1 },
+  stepLineActive: { backgroundColor: '#0066CC' }
 });

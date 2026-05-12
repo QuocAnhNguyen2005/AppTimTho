@@ -1,6 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
+import { BarChart } from 'react-native-chart-kit';
+
+const screenWidth = Dimensions.get("window").width;
 
 export default function WalletScreen() {
   const transactions = [
@@ -9,6 +13,26 @@ export default function WalletScreen() {
     { id: '3', title: 'Trừ phí hoa hồng (Đơn #1230)', amount: '- 15.500đ', date: '03/05/2026 16:45', type: 'deduct' },
   ];
 
+  const chartData = {
+    labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+    datasets: [
+      {
+        data: [120, 200, 150, 300, 250, 400, 180]
+      }
+    ]
+  };
+
+  const chartConfig = {
+    backgroundGradientFrom: "#fff",
+    backgroundGradientTo: "#fff",
+    color: (opacity = 1) => `rgba(0, 102, 204, ${opacity})`,
+    strokeWidth: 2,
+    barPercentage: 0.6,
+    decimalPlaces: 0,
+    fillShadowGradient: '#0066CC',
+    fillShadowGradientOpacity: 0.8,
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -16,8 +40,9 @@ export default function WalletScreen() {
       </View>
 
       <View style={{ flex: 1 }}>
-        <FlatList
+        <FlashList
           data={transactions}
+          estimatedItemSize={70}
           contentContainerStyle={styles.content}
           ListHeaderComponent={
             <>
@@ -28,6 +53,22 @@ export default function WalletScreen() {
                 <Text style={styles.balanceNote}>
                   * Hệ thống tự động trừ 15.5% hoa hồng trên mỗi đơn hoàn thành. Vui lòng duy trì số dư lớn hơn 0 để nhận đơn mới.
                 </Text>
+              </View>
+
+              {/* Revenue Chart */}
+              <View style={styles.chartContainer}>
+                <Text style={styles.sectionTitle}>Doanh thu 7 ngày gần nhất</Text>
+                <BarChart
+                  data={chartData}
+                  width={screenWidth - 40}
+                  height={220}
+                  yAxisLabel=""
+                  yAxisSuffix="k"
+                  chartConfig={chartConfig}
+                  verticalLabelRotation={0}
+                  fromZero={true}
+                  style={styles.chartStyle}
+                />
               </View>
 
               {/* Topup Instructions */}
@@ -109,6 +150,8 @@ const styles = StyleSheet.create({
   syntaxBox: { backgroundColor: '#F0F8FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#BCE0FD' },
   syntaxText: { color: '#0066CC', fontWeight: 'bold', fontSize: 16 },
   bankNote: { fontSize: 12, color: '#888', textAlign: 'center', marginTop: 12, fontStyle: 'italic' },
+  chartContainer: { marginBottom: 24, backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#EEE' },
+  chartStyle: { marginVertical: 8, borderRadius: 16 },
   historySection: {},
   txItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#EEE' },
   txIconBox: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5F5F5', justifyContent: 'center', alignItems: 'center', marginRight: 12 },

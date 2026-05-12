@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { createJob } from '../../services/jobService';
 import { getOnlineWorkers } from '../../services/workerService';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 export default function BookingScreen() {
   const router = useRouter();
@@ -14,6 +16,33 @@ export default function BookingScreen() {
   const [description, setDescription] = useState('');
   const [timeMode, setTimeMode] = useState<'now' | 'schedule'>('now');
   const [isLoading, setIsLoading] = useState(false);
+  const [mediaUri, setMediaUri] = useState<string | null>(null);
+
+  const handleCaptureMedia = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert("Bạn cần cấp quyền camera để chụp ảnh lỗi!");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images', 'videos'],
+      allowsEditing: true,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      if (asset.type === 'image') {
+        const manipResult = await ImageManipulator.manipulateAsync(
+          asset.uri,
+          [{ resize: { width: 800 } }],
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+        );
+        setMediaUri(manipResult.uri);
+      } else {
+        setMediaUri(asset.uri);
+      }
+    }
+  };
 
   const handleBooking = async () => {
     if (!description.trim()) {
@@ -113,14 +142,28 @@ export default function BookingScreen() {
         {/* Step 3: Issue Description */}
         <View style={styles.section}>
           <Text style={styles.stepTitle}>3. Mô tả vấn đề</Text>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Mô tả chi tiết tình trạng lỗi để thợ chuẩn bị dụng cụ..."
-            multiline
-            numberOfLines={4}
-            value={description}
-            onChangeText={setDescription}
-          />
+          <View style={styles.descContainer}>
+            <TextInput
+              style={styles.textInputWithMedia}
+              placeholder="Mô tả chi tiết tình trạng lỗi để thợ chuẩn bị dụng cụ..."
+              multiline
+              numberOfLines={4}
+              value={description}
+              onChangeText={setDescription}
+            />
+            <TouchableOpacity style={styles.captureBtn} onPress={handleCaptureMedia}>
+              <Ionicons name="camera" size={36} color="#0066CC" />
+              <Text style={styles.captureBtnText}>Chụp lỗi</Text>
+            </TouchableOpacity>
+          </View>
+          {mediaUri && (
+            <View style={styles.mediaPreviewContainer}>
+              <Image source={{ uri: mediaUri }} style={styles.mediaPreview} />
+              <TouchableOpacity style={styles.removeMediaBtn} onPress={() => setMediaUri(null)}>
+                <Ionicons name="close-circle" size={28} color="#E74C3C" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Step 4: Confirmation */}
@@ -226,7 +269,12 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
   },
-  textInput: {
+  descContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  textInputWithMedia: {
+    flex: 1,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#E0E0E0',
@@ -235,6 +283,40 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
     fontSize: 14,
+  },
+  captureBtn: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#F0F8FF',
+    borderWidth: 1,
+    borderColor: '#0066CC',
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  captureBtnText: {
+    color: '#0066CC',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  mediaPreviewContainer: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    position: 'relative',
+  },
+  mediaPreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+  },
+  removeMediaBtn: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: '#fff',
+    borderRadius: 14,
   },
   timeButtons: {
     flexDirection: 'row',

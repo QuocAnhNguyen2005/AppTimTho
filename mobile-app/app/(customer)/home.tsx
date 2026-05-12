@@ -6,8 +6,16 @@ import * as Linking from 'expo-linking';
 import { Image } from 'expo-image';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { getOnlineWorkers, WorkerInfo } from '../../services/workerService';
-import { useAuth } from '../../context/AuthContext';
+import MapView, { UrlTile, Marker } from 'react-native-maps';
+
+const services = [
+  { id: 1, name: 'Sửa Điện', icon: 'flash', color: '#FF9800' },
+  { id: 2, name: 'Sửa Nước', icon: 'water', color: '#03A9F4' },
+  { id: 3, name: 'Điện Lạnh', icon: 'snow', color: '#00BCD4' },
+  { id: 4, name: 'Thông Tắc', icon: 'construct', color: '#795548' },
+  { id: 5, name: 'Thợ Xây', icon: 'hammer', color: '#607D8B' },
+  { id: 6, name: 'Vệ Sinh', icon: 'leaf', color: '#4CAF50' },
+];
 
 export default function CustomerHome() {
   const router = useRouter();
@@ -18,32 +26,26 @@ export default function CustomerHome() {
   const [loadingWorkers, setLoadingWorkers] = useState(true);
   const { user } = useAuth();
 
+  // Local state for live worker simulation
+  const [liveWorkers, setLiveWorkers] = useState([
+    { id: 1, lat: 10.762, lng: 106.660 },
+    { id: 2, lat: 10.765, lng: 106.662 },
+    { id: 3, lat: 10.760, lng: 106.665 },
+  ]);
+
   useEffect(() => {
     fetchWorkers();
+    
+    // Simulate workers moving on the map
+    const interval = setInterval(() => {
+      setLiveWorkers(prev => prev.map(w => ({
+        ...w,
+        lat: w.lat + (Math.random() - 0.5) * 0.001,
+        lng: w.lng + (Math.random() - 0.5) * 0.001
+      })));
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
-
-  const fetchWorkers = async () => {
-    setLoadingWorkers(true);
-    const result = await getOnlineWorkers();
-    if (result.success && result.workers) {
-      setWorkers(result.workers);
-    }
-    setLoadingWorkers(false);
-  };
-
-  const services = [
-    { id: 1, name: 'Sửa Điện', icon: 'flash', color: '#FF9800' },
-    { id: 2, name: 'Sửa Nước', icon: 'water', color: '#03A9F4' },
-    { id: 3, name: 'Điện Lạnh', icon: 'snow', color: '#00BCD4' },
-    { id: 4, name: 'Thông Tắc', icon: 'construct', color: '#795548' },
-    { id: 5, name: 'Thợ Xây', icon: 'hammer', color: '#607D8B' },
-    { id: 6, name: 'Vệ Sinh', icon: 'leaf', color: '#4CAF50' },
-  ];
-
-  const previousWorkers = [
-    { id: 4, name: 'Phạm Minh D', skill: 'Thông Tắc', rating: 5.0, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026712d', lastBooked: '2 tuần trước' },
-    { id: 5, name: 'Hoàng Quốc E', skill: 'Sửa Điện', rating: 4.7, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026734d', lastBooked: '1 tháng trước' },
-  ];
 
   const handleOpenWorker = (worker: any) => {
     setSelectedWorker(worker);
@@ -118,24 +120,40 @@ export default function CustomerHome() {
             </View>
           </View>
 
-          {/* Previous Workers (Re-book) */}
-          <View style={[styles.sectionContainer, { marginTop: 8 }]}>
-            <Text style={styles.sectionTitle}>Thợ bạn đã thuê</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24, paddingHorizontal: 24 }}>
-              {previousWorkers.map(worker => (
-                <TouchableOpacity key={worker.id} style={styles.workerCard} onPress={() => handleOpenWorker(worker)}>
-                  <View style={styles.rebookBadge}>
-                    <Ionicons name="refresh" size={12} color="#fff" />
-                    <Text style={styles.rebookBadgeText}>Đặt lại</Text>
-                  </View>
-                  <Image source={{ uri: worker.avatar }} style={styles.workerAvatar} cachePolicy="memory-disk" />
-                  <Text style={styles.workerName}>{worker.name}</Text>
-                  <Text style={styles.workerSkill}>{worker.skill}</Text>
-                  <Text style={styles.lastBookedText}>{worker.lastBooked}</Text>
-                </TouchableOpacity>
-              ))}
-              <View style={{ width: 48 }} />
-            </ScrollView>
+          {/* Map Mini Heatmap */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Thợ đang hoạt động gần bạn</Text>
+            <View style={styles.mapWrapper}>
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: 10.762622,
+                  longitude: 106.660172,
+                  latitudeDelta: 0.02,
+                  longitudeDelta: 0.02,
+                }}
+              >
+                <UrlTile
+                  urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  maximumZ={19}
+                  flipY={false}
+                />
+                {liveWorkers.map(w => (
+                  <Marker
+                    key={w.id}
+                    coordinate={{ latitude: w.lat, longitude: w.lng }}
+                  >
+                    <View style={styles.liveWorkerDot}>
+                      <View style={styles.liveWorkerDotInner} />
+                    </View>
+                  </Marker>
+                ))}
+              </MapView>
+              <View style={styles.mapOverlayText}>
+                <Ionicons name="flash" size={16} color="#FF9800" />
+                <Text style={styles.mapOverlayLabel}>Hàng chục thợ sẵn sàng</Text>
+              </View>
+            </View>
           </View>
 
           {/* Featured Workers */}
@@ -469,5 +487,60 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  mapWrapper: {
+    height: 180,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  liveWorkerDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 102, 204, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  liveWorkerDotInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#0066CC',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  mapOverlayText: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  mapOverlayLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 4,
   },
 });

@@ -5,8 +5,25 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withRepeat, withTiming, Easing } from 'react-native-reanimated';
+import MapView, { UrlTile, Circle, Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import { useAuth } from '../../context/AuthContext';
 import { getWorkerJobs, updateJobStatus } from '../../services/jobService';
+
+const LOCATION_TASK_NAME = 'background-location-task';
+
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+  if (error) {
+    console.error(error);
+    return;
+  }
+  if (data) {
+    const { locations } = data as any;
+    console.log('Throttled background location update:', locations[0]);
+    // TODO: Send to backend
+  }
+});
 
 const { width } = Dimensions.get('window');
 
@@ -22,11 +39,32 @@ export default function WorkerHome() {
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.5);
 
-  // Poll jobs when online
+  // Request location permissions
+  useEffect(() => {
+    (async () => {
+      const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+      if (fgStatus === 'granted') {
+        await Location.requestBackgroundPermissionsAsync();
+      }
+    })();
+  }, []);
+
+  // Poll jobs when online and start background location
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     
     if (isOnline && user?.id) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: 20, // Send update every 20 meters
+        deferredUpdatesInterval: 10000,
+        foregroundService: {
+          notificationTitle: "Đang nhận đơn",
+          notificationBody: "App Tìm Thợ đang theo dõi vị trí để gửi đơn cho bạn.",
+          notificationColor: "#E67E22",
+        },
+      }).catch(console.log);
+
       intervalId = setInterval(async () => {
         const result = await getWorkerJobs(user.id);
         if (result.success && result.jobs) {
@@ -41,6 +79,7 @@ export default function WorkerHome() {
         }
       }, 3000);
     } else {
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch(console.log);
       setIncomingJob(null);
     }
 
@@ -159,10 +198,40 @@ export default function WorkerHome() {
           </View>
         ) : (
           <View style={styles.onlineBox}>
-            <Animated.View style={[styles.radarCircle, { width: 100, height: 100, borderRadius: 50 }, animatedPulseStyle1]} />
-            <Animated.View style={[styles.radarCircle, { width: 100, height: 100, borderRadius: 50, position: 'absolute' }, animatedPulseStyle2]} />
-            <Ionicons name="location" size={40} color="#E67E22" style={{ position: 'absolute' }} />
-            <Text style={styles.onlineText}>Đang quét các đơn sửa chữa quanh bạn...</Text>
+            <MapView
+              style={{ width: '100%', height: '100%' }}
+              initialRegion={{
+                latitude: 10.762622,
+                longitude: 106.660172,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              }}
+            >
+              <UrlTile
+                urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maximumZ={19}
+                flipY={false}
+              />
+              <Circle
+                center={{ latitude: 10.760, longitude: 106.665 }}
+                radius={800}
+                fillColor="rgba(231, 76, 60, 0.4)"
+                strokeWidth={0}
+              />
+              <Circle
+                center={{ latitude: 10.770, longitude: 106.670 }}
+                radius={1200}
+                fillColor="rgba(230, 126, 34, 0.3)"
+                strokeWidth={0}
+              />
+              <Marker coordinate={{ latitude: 10.762622, longitude: 106.660172 }}>
+                <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                  <Animated.View style={[styles.radarCircle, { width: 60, height: 60, borderRadius: 30, position: 'absolute' }, animatedPulseStyle1]} />
+                  <Ionicons name="person-circle" size={36} color="#0066CC" />
+                </View>
+              </Marker>
+            </MapView>
+            <Text style={styles.onlineText}>Đang quét các đơn (Vùng đỏ: Nhu cầu cao)</Text>
           </View>
         )}
       </View>

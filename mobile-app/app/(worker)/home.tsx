@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Switch, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-import MapView, { UrlTile, Circle, Marker } from 'react-native-maps';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withRepeat, withTiming, Easing, SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import MapView, { UrlTile, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useAuth } from '../../context/AuthContext';
@@ -21,7 +21,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
   if (data) {
     const { locations } = data as any;
     console.log('Throttled background location update:', locations[0]);
-    // TODO: Send to backend
   }
 });
 
@@ -29,6 +28,7 @@ const { width } = Dimensions.get('window');
 
 export default function WorkerHome() {
   const router = useRouter();
+  const mapRef = useRef<MapView>(null);
   const [isOnline, setIsOnline] = useState(false);
   const [incomingJob, setIncomingJob] = useState<any>(null);
   const { user } = useAuth();
@@ -39,7 +39,6 @@ export default function WorkerHome() {
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.5);
 
-  // Request location permissions
   useEffect(() => {
     (async () => {
       const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
@@ -49,14 +48,13 @@ export default function WorkerHome() {
     })();
   }, []);
 
-  // Poll jobs when online and start background location
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     
     if (isOnline && user?.id) {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 20, // Send update every 20 meters
+        distanceInterval: 20,
         deferredUpdatesInterval: 10000,
         foregroundService: {
           notificationTitle: "Đang nhận đơn",
@@ -68,11 +66,18 @@ export default function WorkerHome() {
       intervalId = setInterval(async () => {
         const result = await getWorkerJobs(user.id);
         if (result.success && result.jobs) {
-          // Look for PENDING jobs
           const pendingJob = result.jobs.find(j => j.status === 'PENDING');
           if (pendingJob) {
             setIncomingJob(pendingJob);
-            translateX.value = 0; // reset swipe
+            translateX.value = 0;
+            
+            // Zoom to customer location when job arrives
+            if (mapRef.current) {
+               mapRef.current.animateCamera({
+                 center: { latitude: 10.762622, longitude: 106.660172 }, // Mock customer loc
+                 zoom: 16
+               });
+            }
           } else {
             setIncomingJob(null);
           }
@@ -99,10 +104,7 @@ export default function WorkerHome() {
   const handleAcceptJob = async () => {
     if (!incomingJob) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    
-    // Update status on backend
     await updateJobStatus(incomingJob.id, 'ACCEPTED');
-    
     setIncomingJob(null);
     router.push(`/(worker)/job-detail?jobId=${incomingJob.id}`);
   };
@@ -136,188 +138,264 @@ export default function WorkerHome() {
     transform: [{ scale: pulseScale.value }],
     opacity: pulseOpacity.value,
   }));
-  const animatedPulseStyle2 = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value * 1.5 }],
-    opacity: pulseOpacity.value * 0.5,
-  }));
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.container}>
-      {/* Header Info */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Xin chào,</Text>
-          <Text style={styles.workerName}>Thợ Nguyễn Văn A</Text>
-        </View>
-        <TouchableOpacity onPress={() => router.push('/(worker)/profile')}>
-          <Ionicons name="person-circle" size={48} color="#E67E22" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Online Toggle */}
-      <View style={styles.toggleContainer}>
-        <Text style={styles.toggleText}>{isOnline ? 'ĐANG BẬT NHẬN ĐƠN' : 'ĐANG TẮT NHẬN ĐƠN'}</Text>
-        <Switch
-          trackColor={{ false: '#ccc', true: '#E67E22' }}
-          thumbColor={isOnline ? '#fff' : '#f4f3f4'}
-          ios_backgroundColor="#ccc"
-          onValueChange={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setIsOnline(!isOnline);
+      <View style={styles.container}>
+        
+        {/* Full Screen Map */}
+        <MapView
+          ref={mapRef}
+          style={StyleSheet.absoluteFillObject}
+          initialRegion={{
+            latitude: 10.762622,
+            longitude: 106.660172,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
           }}
-          value={isOnline}
-          style={{ transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }] }}
-        />
-      </View>
-
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <View style={styles.statIconBox}>
-            <Ionicons name="wallet" size={24} color="#0066CC" />
-          </View>
-          <Text style={styles.statLabel}>Ví Tín Dụng</Text>
-          <Text style={styles.statValue}>500.000đ</Text>
-        </View>
-        <View style={styles.statCard}>
-          <View style={styles.statIconBox}>
-            <Ionicons name="cash" size={24} color="#27AE60" />
-          </View>
-          <Text style={styles.statLabel}>Tiền mặt hôm nay</Text>
-          <Text style={styles.statValue}>1.200.000đ</Text>
-        </View>
-      </View>
-
-      {/* Map / Offline State Placeholder */}
-      <View style={styles.mapArea}>
-        {!isOnline ? (
-          <View style={styles.offlineBox}>
-            <Ionicons name="moon" size={64} color="#999" />
-            <Text style={styles.offlineText}>Bạn đang Offline. Bật nhận đơn để bắt đầu làm việc.</Text>
-          </View>
-        ) : (
-          <View style={styles.onlineBox}>
-            <MapView
-              style={{ width: '100%', height: '100%' }}
-              initialRegion={{
-                latitude: 10.762622,
-                longitude: 106.660172,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-              }}
-            >
-              <UrlTile
-                urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maximumZ={19}
-                flipY={false}
-              />
-              <Circle
-                center={{ latitude: 10.760, longitude: 106.665 }}
-                radius={800}
-                fillColor="rgba(231, 76, 60, 0.4)"
-                strokeWidth={0}
-              />
-              <Circle
-                center={{ latitude: 10.770, longitude: 106.670 }}
-                radius={1200}
-                fillColor="rgba(230, 126, 34, 0.3)"
-                strokeWidth={0}
-              />
+          showsUserLocation={true}
+          showsMyLocationButton={false}
+        >
+          <UrlTile
+            urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maximumZ={19}
+            flipY={false}
+          />
+          
+          {/* Heatmap Fire Icons */}
+          {isOnline && (
+            <>
+              <Marker coordinate={{ latitude: 10.760, longitude: 106.665 }}>
+                <View style={styles.fireIconContainer}>
+                  <Ionicons name="flame" size={32} color="#E74C3C" />
+                </View>
+              </Marker>
+              <Marker coordinate={{ latitude: 10.770, longitude: 106.670 }}>
+                <View style={[styles.fireIconContainer, { transform: [{scale: 0.8}] }]}>
+                  <Ionicons name="flame" size={32} color="#E67E22" />
+                </View>
+              </Marker>
+              
+              {/* Worker Pulse */}
               <Marker coordinate={{ latitude: 10.762622, longitude: 106.660172 }}>
                 <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                   <Animated.View style={[styles.radarCircle, { width: 60, height: 60, borderRadius: 30, position: 'absolute' }, animatedPulseStyle1]} />
                   <Ionicons name="person-circle" size={36} color="#0066CC" />
                 </View>
               </Marker>
-            </MapView>
-            <Text style={styles.onlineText}>Đang quét các đơn (Vùng đỏ: Nhu cầu cao)</Text>
+            </>
+          )}
+        </MapView>
+
+        {/* Offline Overlay */}
+        {!isOnline && (
+          <View style={styles.offlineOverlay}>
+            <View style={styles.offlineBox}>
+              <Ionicons name="moon" size={48} color="#999" />
+              <Text style={styles.offlineText}>Bạn đang Offline</Text>
+            </View>
           </View>
         )}
-      </View>
 
-      {/* New Job Alert Modal overlay */}
-      {incomingJob && (
-        <View style={styles.newJobOverlay}>
-          <View style={styles.newJobCard}>
-            <View style={styles.jobHeader}>
-              <View style={styles.pulseDot} />
-              <Text style={styles.jobHeaderTitle}>ĐƠN MỚI TỚI!</Text>
+        {/* Floating Actions */}
+        <SafeAreaView style={styles.floatingTop}>
+          <View style={styles.topRow}>
+            {/* Minimal Wallet Info */}
+            <View style={styles.walletBox}>
+              <Ionicons name="wallet" size={16} color="#0066CC" />
+              <Text style={styles.walletText}>500.000đ</Text>
             </View>
             
-            <View style={styles.jobInfoRow}>
-              <Ionicons name="location" size={20} color="#E74C3C" />
-              <Text style={styles.jobInfoText}>Địa chỉ: <Text style={{fontWeight: 'bold'}}>{incomingJob.address || 'Gần bạn'}</Text></Text>
-            </View>
-            
-            <View style={styles.jobInfoRow}>
-              <Ionicons name="construct" size={20} color="#0066CC" />
-              <Text style={styles.jobInfoText}>{incomingJob.description}</Text>
-            </View>
-            
-            <View style={styles.mediaPreview}>
-              <Ionicons name="image" size={30} color="#999" />
-              <Text style={styles.mediaPreviewText}>Khách có gửi 1 ảnh đính kèm</Text>
-            </View>
-
-            <View style={styles.feeBox}>
-              <Text style={styles.feeLabel}>Phí kiểm tra:</Text>
-              <Text style={styles.feeValue}>50.000đ</Text>
-            </View>
-
-            {/* Swipe to accept with Reanimated */}
-            <View style={styles.swipeContainer}>
-              <Text style={styles.swipeText}>Vuốt để nhận đơn</Text>
-              <GestureDetector gesture={panGesture}>
-                <Animated.View style={[styles.swipeThumb, animatedSwipeStyle]}>
-                  <Ionicons name="arrow-forward" size={24} color="#fff" />
-                </Animated.View>
-              </GestureDetector>
-            </View>
-
-            <TouchableOpacity style={styles.rejectBtn} onPress={handleRejectJob}>
-              <Text style={styles.rejectBtnText}>Từ chối</Text>
+            {/* FAB Online Toggle */}
+            <TouchableOpacity 
+              style={[styles.fabToggle, isOnline ? styles.fabOnline : styles.fabOffline]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setIsOnline(!isOnline);
+              }}
+            >
+              <Ionicons name="power" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
-        </View>
-      )}
-      </SafeAreaView>
+        </SafeAreaView>
+
+        {/* Recenter Button */}
+        <TouchableOpacity 
+          style={styles.recenterBtn}
+          onPress={() => {
+            mapRef.current?.animateCamera({
+              center: { latitude: 10.762622, longitude: 106.660172 },
+              zoom: 15,
+            });
+          }}
+        >
+          <Ionicons name="locate" size={24} color="#333" />
+        </TouchableOpacity>
+
+        {/* New Job Alert Popup */}
+        {incomingJob && (
+          <Animated.View 
+            entering={SlideInDown.springify().damping(15)} 
+            exiting={SlideOutDown} 
+            style={styles.jobPopupContainer}
+          >
+            <View style={styles.newJobCard}>
+              <View style={styles.jobHeader}>
+                <View style={styles.pulseDot} />
+                <Text style={styles.jobHeaderTitle}>ĐƠN MỚI TỚI!</Text>
+              </View>
+              
+              <View style={styles.jobInfoRow}>
+                <Ionicons name="location" size={20} color="#E74C3C" />
+                <Text style={styles.jobInfoText}>Khách cách bạn: <Text style={{fontWeight: 'bold'}}>1.2 km</Text></Text>
+              </View>
+              
+              <View style={styles.jobInfoRow}>
+                <Ionicons name="construct" size={20} color="#0066CC" />
+                <Text style={styles.jobInfoText}>{incomingJob.description}</Text>
+              </View>
+
+              <View style={styles.feeBox}>
+                <Text style={styles.feeLabel}>Phí kiểm tra:</Text>
+                <Text style={styles.feeValue}>50.000đ</Text>
+              </View>
+
+              <View style={styles.swipeContainer}>
+                <Text style={styles.swipeText}>Vuốt để nhận đơn</Text>
+                <GestureDetector gesture={panGesture}>
+                  <Animated.View style={[styles.swipeThumb, animatedSwipeStyle]}>
+                    <Ionicons name="arrow-forward" size={24} color="#fff" />
+                  </Animated.View>
+                </GestureDetector>
+              </View>
+
+              <TouchableOpacity style={styles.rejectBtn} onPress={handleRejectJob}>
+                <Text style={styles.rejectBtnText}>Bỏ qua đơn này</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        )}
+      </View>
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
-  greeting: { fontSize: 16, color: '#666' },
-  workerName: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-  toggleContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 20, padding: 20, borderRadius: 16, shadowColor: '#000', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3, marginBottom: 20 },
-  toggleText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  statsContainer: { flexDirection: 'row', paddingHorizontal: 20, gap: 16, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: '#fff', padding: 16, borderRadius: 16, shadowColor: '#000', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
-  statIconBox: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0F4F8', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  statLabel: { fontSize: 13, color: '#666', marginBottom: 4 },
-  statValue: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  mapArea: { flex: 1, backgroundColor: '#EAEAEA', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  offlineBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  offlineText: { fontSize: 16, color: '#666', textAlign: 'center', marginTop: 16, lineHeight: 24 },
-  onlineBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  radarCircle: { backgroundColor: 'rgba(230, 126, 34, 0.1)', borderWidth: 1, borderColor: 'rgba(230, 126, 34, 0.3)', justifyContent: 'center', alignItems: 'center' },
-  onlineText: { position: 'absolute', bottom: 40, backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, overflow: 'hidden', fontWeight: 'bold', color: '#E67E22', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
-  newJobOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20, zIndex: 100 },
-  newJobCard: { width: '100%', backgroundColor: '#fff', borderRadius: 24, padding: 24 },
+  floatingTop: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    zIndex: 10,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  walletBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  walletText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  fabToggle: {
+    width: 56, height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  fabOnline: { backgroundColor: '#27AE60' },
+  fabOffline: { backgroundColor: '#95A5A6' },
+  offlineOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
+  },
+  offlineBox: {
+    backgroundColor: '#fff',
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  offlineText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  fireIconContainer: {
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 20,
+    padding: 4,
+    shadowColor: '#E74C3C',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+  },
+  radarCircle: { backgroundColor: 'rgba(39, 174, 96, 0.2)', borderWidth: 1, borderColor: 'rgba(39, 174, 96, 0.4)', justifyContent: 'center', alignItems: 'center' },
+  recenterBtn: {
+    position: 'absolute',
+    right: 20,
+    bottom: 40,
+    backgroundColor: '#fff',
+    width: 48, height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 10,
+  },
+  jobPopupContainer: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+    zIndex: 100,
+  },
+  newJobCard: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 10,
+  },
   jobHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, alignSelf: 'center' },
   pulseDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#E74C3C', marginRight: 8 },
   jobHeaderTitle: { fontSize: 20, fontWeight: 'bold', color: '#E74C3C' },
   jobInfoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   jobInfoText: { fontSize: 16, color: '#333', marginLeft: 12 },
-  mediaPreview: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9F9F9', padding: 12, borderRadius: 8, marginTop: 8, marginBottom: 16 },
-  mediaPreviewText: { marginLeft: 12, color: '#666', fontStyle: 'italic' },
-  feeBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFF4E6', padding: 16, borderRadius: 12, marginBottom: 24 },
+  feeBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFF4E6', padding: 16, borderRadius: 12, marginBottom: 24, marginTop: 8 },
   feeLabel: { fontSize: 16, color: '#555' },
   feeValue: { fontSize: 20, fontWeight: 'bold', color: '#E67E22' },
-  acceptBtn: { backgroundColor: '#27AE60', height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', shadowColor: '#27AE60', shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.4, shadowRadius: 10, elevation: 5, marginBottom: 16 },
-  acceptBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   swipeContainer: { backgroundColor: '#E8F5E9', height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
   swipeText: { color: '#27AE60', fontSize: 16, fontWeight: 'bold' },
   swipeThumb: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#27AE60', justifyContent: 'center', alignItems: 'center', position: 'absolute', left: 4 },

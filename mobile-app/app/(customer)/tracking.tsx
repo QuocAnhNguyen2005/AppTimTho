@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import { getJobById } from '../../services/jobService';
 
 export default function TrackingScreen() {
@@ -12,6 +13,55 @@ export default function TrackingScreen() {
   const [rating, setRating] = useState(0);
   const [workerInfo, setWorkerInfo] = useState<any>(null);
   const [totalPrice, setTotalPrice] = useState<number>(150000);
+  
+  const mapRef = useRef<MapView>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<{latitude: number, longitude: number}[]>([]);
+  
+  // Mock coordinates for demo
+  const customerLocation = { latitude: 10.762622, longitude: 106.660172 };
+  const [workerLocation, setWorkerLocation] = useState({ latitude: 10.770, longitude: 106.670 });
+
+  // Fetch OSRM Route
+  const fetchRoute = async () => {
+    try {
+      const url = `http://router.project-osrm.org/route/v1/driving/${workerLocation.longitude},${workerLocation.latitude};${customerLocation.longitude},${customerLocation.latitude}?overview=full&geometries=geojson`;
+      const response = await fetch(url);
+      const json = await response.json();
+      if (json.routes && json.routes.length > 0) {
+        const coords = json.routes[0].geometry.coordinates.map((point: [number, number]) => ({
+          latitude: point[1],
+          longitude: point[0],
+        }));
+        setRouteCoordinates(coords);
+
+        // Fit map to coordinates
+        if (mapRef.current) {
+          mapRef.current.fitToCoordinates([workerLocation, customerLocation], {
+            edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+            animated: true,
+          });
+        }
+      }
+    } catch (error) {
+      console.log('Error fetching route:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (status === 'accepted' || status === 'arriving') {
+      fetchRoute();
+      
+      // Simulate worker moving closer
+      const moveInterval = setInterval(() => {
+        setWorkerLocation(prev => ({
+          latitude: prev.latitude - 0.0005,
+          longitude: prev.longitude - 0.0005,
+        }));
+        fetchRoute(); // Re-fetch route as worker moves
+      }, 5000);
+      return () => clearInterval(moveInterval);
+    }
+  }, [status]);
 
   useEffect(() => {
     if (!jobId) return;
@@ -110,14 +160,44 @@ export default function TrackingScreen() {
 
     return (
       <View style={{ flex: 1 }}>
-        {/* Map Mock */}
         <View style={styles.mapArea}>
-          <View style={styles.mapPlaceholder}>
-            <Ionicons name="map-outline" size={64} color="#999" />
-            <Text style={{ marginTop: 8, color: '#666' }}>
-              {status === 'arriving' ? 'Bản đồ Live: Thợ đang di chuyển...' : 'Vị trí hiện tại'}
-            </Text>
-          </View>
+          <MapView
+            ref={mapRef}
+            style={{ width: '100%', height: '100%' }}
+            initialRegion={{
+              latitude: customerLocation.latitude,
+              longitude: customerLocation.longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
+          >
+            <UrlTile
+              urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maximumZ={19}
+            />
+            {/* Customer Marker */}
+            <Marker coordinate={customerLocation}>
+              <View style={styles.customerMarker}>
+                <Ionicons name="home" size={20} color="#fff" />
+              </View>
+            </Marker>
+            
+            {/* Worker Marker */}
+            <Marker coordinate={workerLocation}>
+              <View style={styles.workerMarker}>
+                <Ionicons name="build" size={20} color="#fff" />
+              </View>
+            </Marker>
+
+            {/* Route Polyline */}
+            {routeCoordinates.length > 0 && (
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#0066CC"
+                strokeWidth={4}
+              />
+            )}
+          </MapView>
         </View>
 
         {/* Worker Card */}
@@ -280,5 +360,7 @@ const styles = StyleSheet.create({
   stepLabel: { fontSize: 10, color: '#999', marginTop: 8, textAlign: 'center' },
   stepLabelActive: { color: '#0066CC', fontWeight: 'bold' },
   stepLine: { position: 'absolute', top: 11, left: '50%', width: '100%', height: 2, backgroundColor: '#E0E0E0', zIndex: 1 },
-  stepLineActive: { backgroundColor: '#0066CC' }
+  stepLineActive: { backgroundColor: '#0066CC' },
+  customerMarker: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff' },
+  workerMarker: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#0066CC', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff' }
 });

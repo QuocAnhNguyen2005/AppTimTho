@@ -7,6 +7,8 @@ import { Image } from 'expo-image';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { UrlTile, Marker } from 'react-native-maps';
+import { getOnlineWorkers, WorkerInfo } from '../../services/workerService';
+import { useAuth } from '../../context/AuthContext';
 
 const services = [
   { id: 1, name: 'Sửa Điện', icon: 'flash', color: '#FF9800' },
@@ -46,6 +48,15 @@ export default function CustomerHome() {
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchWorkers = async () => {
+    setLoadingWorkers(true);
+    const result = await getOnlineWorkers();
+    if (result.success && result.workers) {
+      setWorkers(result.workers);
+    }
+    setLoadingWorkers(false);
+  };
 
   const handleOpenWorker = (worker: any) => {
     setSelectedWorker(worker);
